@@ -89,7 +89,7 @@
 <body class="min-h-screen flex flex-col md:items-center md:justify-center md:p-4 bg-gray-50">
 
     <!-- Zoom Modal -->
-    <div id="zoom-modal" class="zoom-overlay hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer" onclick="closeZoom()">
+    <div id="zoom-modal" class="zoom-overlay hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer" onclick="closeZoom()" tabindex="-1" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="relative max-w-full max-h-full flex flex-col items-center">
             <img id="zoomed-qr-img" class="zoom-img bg-white rounded-2xl shadow-2xl max-w-[90vw] max-h-[80vh] object-contain" src="" alt="Zoomed QR">
             <p class="text-white/70 mt-4 text-sm font-medium animate-pulse">點擊任意處關閉</p>
@@ -340,7 +340,7 @@
                 <div class="p-4 md:p-8 flex flex-row md:flex-col items-center justify-between md:justify-center md:h-full gap-4">
                     
                     <!-- QR Display (Updated for click to zoom) -->
-                    <div class="flex flex-col items-center flex-shrink-0 cursor-pointer" onclick="toggleZoom()" title="點擊放大">
+                    <div id="qr-preview-wrapper" class="flex flex-col items-center flex-shrink-0 cursor-pointer" onclick="toggleZoom()" title="點擊放大" tabindex="0" role="button" aria-label="點擊以放大 QR Code">
                         <div class="bg-white p-2 md:p-6 rounded-xl md:rounded-3xl shadow-sm md:shadow-xl border border-gray-100 relative group transition-transform hover:scale-[1.02]">
                             <!-- Increased width to w-40 (160px) for mobile -->
                             <canvas id="qr-code" class="w-40 h-40 md:w-64 md:h-64 rounded-lg"></canvas>
@@ -456,6 +456,23 @@
             populateStations();
             switchTab('ticket'); // Force ticket tab active
             updateHistoryCount();
+
+            // Keyboard accessibility: ESC to close zoom, Enter/Space to open when preview has focus
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeZoom();
+                }
+            });
+
+            const previewWrap = document.getElementById('qr-preview-wrapper');
+            if (previewWrap) {
+                previewWrap.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleZoom();
+                    }
+                });
+            }
         });
 
         // --- ZOOM FUNCTIONALITY ---
@@ -463,16 +480,29 @@
             const modal = document.getElementById('zoom-modal');
             const zoomedImg = document.getElementById('zoomed-qr-img');
             const canvas = document.getElementById('qr-code');
-            
-            // Set image source from canvas
+
+            // Toggle: if visible, hide
+            if (!modal.classList.contains('hidden')) {
+                closeZoom();
+                return;
+            }
+
+            // Set image source from canvas and show
             zoomedImg.src = canvas.toDataURL("image/png");
-            
             modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            // Focus the modal for keyboard actions
+            try { modal.focus(); } catch (e) {}
+            // Prevent body scroll while zoom is open
+            document.body.style.overflow = 'hidden';
         }
 
         function closeZoom() {
             const modal = document.getElementById('zoom-modal');
             modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            // Re-enable body scroll
+            document.body.style.overflow = '';
         }
 
         // --- EXISTING LOGIC ---
