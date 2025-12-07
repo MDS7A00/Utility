@@ -62,9 +62,39 @@
             background-color: #eff6ff;
             box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
         }
+
+        /* Zoom Animation */
+        .zoom-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .zoom-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .zoom-overlay:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .zoom-img {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .zoom-overlay:not(.hidden) .zoom-img {
+            transform: scale(1);
+        }
+        .zoom-overlay.hidden .zoom-img {
+            transform: scale(0.5);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col md:items-center md:justify-center md:p-4 bg-gray-50">
+
+    <!-- Zoom Modal -->
+    <div id="zoom-modal" class="zoom-overlay hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer" onclick="closeZoom()">
+        <div class="relative max-w-full max-h-full flex flex-col items-center">
+            <img id="zoomed-qr-img" class="zoom-img bg-white rounded-2xl shadow-2xl max-w-[90vw] max-h-[80vh] object-contain" src="" alt="Zoomed QR">
+            <p class="text-white/70 mt-4 text-sm font-medium animate-pulse">點擊任意處關閉</p>
+        </div>
+    </div>
 
     <!-- Main Container -->
     <div class="bg-white w-full max-w-6xl md:rounded-3xl shadow-xl flex flex-col relative h-screen md:h-auto md:min-h-[800px] overflow-hidden">
@@ -97,8 +127,6 @@
                 <!-- === TAB: GENERAL === -->
                 <div id="panel-general" class="p-5 md:p-8 hidden">
                     
-                    <!-- AI Section Removed -->
-
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">內容輸入</label>
@@ -311,10 +339,17 @@
             <div class="mobile-sticky-preview absolute bottom-0 left-0 w-full md:relative md:w-2/5 md:bg-gray-50 border-t md:border-t-0 md:border-l border-gray-200 z-30">
                 <div class="p-4 md:p-8 flex flex-row md:flex-col items-center justify-between md:justify-center md:h-full gap-4">
                     
-                    <!-- QR Display (Increased size for mobile: w-40 h-40 = 160px) -->
-                    <div class="flex flex-col items-center flex-shrink-0">
-                        <div class="bg-white p-2 md:p-6 rounded-xl md:rounded-3xl shadow-sm md:shadow-xl border border-gray-100 relative group">
+                    <!-- QR Display (Updated for click to zoom) -->
+                    <div class="flex flex-col items-center flex-shrink-0 cursor-pointer" onclick="toggleZoom()" title="點擊放大">
+                        <div class="bg-white p-2 md:p-6 rounded-xl md:rounded-3xl shadow-sm md:shadow-xl border border-gray-100 relative group transition-transform hover:scale-[1.02]">
+                            <!-- Increased width to w-40 (160px) for mobile -->
                             <canvas id="qr-code" class="w-40 h-40 md:w-64 md:h-64 rounded-lg"></canvas>
+                            <!-- Zoom Hint Icon -->
+                            <div class="absolute top-2 right-2 md:top-4 md:right-4 bg-gray-100/80 p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                </svg>
+                            </div>
                             <!-- Success Overlay for Save -->
                             <div id="save-success" class="absolute inset-0 bg-green-500/90 rounded-lg md:rounded-xl flex flex-col items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
                                 <svg class="w-8 h-8 md:w-16 md:h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -323,7 +358,7 @@
                         </div>
 
                         <!-- ECC Level Selector -->
-                        <div class="mt-2 w-full max-w-[150px]">
+                        <div class="mt-2 w-full max-w-[150px]" onclick="event.stopPropagation()">
                             <label class="text-[10px] text-gray-400 block text-center mb-0.5">糾錯等級 (ECC Level)</label>
                             <select id="qr-ecc-level" onchange="refreshQR()" class="w-full text-xs p-1 border rounded text-center bg-gray-50 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300">
                                 <option value="L">L (7%)</option>
@@ -400,7 +435,7 @@
         // Initialize QR with default level M
         let qr = new QRious({
             element: document.getElementById('qr-code'),
-            size: 600, // High res for download
+            size: 600, // High res for download/zoom
             value: '',
             level: 'M'
         });
@@ -422,6 +457,25 @@
             switchTab('ticket'); // Force ticket tab active
             updateHistoryCount();
         });
+
+        // --- ZOOM FUNCTIONALITY ---
+        function toggleZoom() {
+            const modal = document.getElementById('zoom-modal');
+            const zoomedImg = document.getElementById('zoomed-qr-img');
+            const canvas = document.getElementById('qr-code');
+            
+            // Set image source from canvas
+            zoomedImg.src = canvas.toDataURL("image/png");
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeZoom() {
+            const modal = document.getElementById('zoom-modal');
+            modal.classList.add('hidden');
+        }
+
+        // --- EXISTING LOGIC ---
 
         function populateStations() {
             const datalist = document.getElementById('station-list');
@@ -468,8 +522,7 @@
                 updateGeneralQR();
             } else if (mode === 'history') {
                 saveBtn.classList.add('hidden');
-                checksumDisp.classList.add('hidden'); // hidden initially until Show QR clicked
-                // Do not clear the preview immediately so user can see what they just saved
+                checksumDisp.classList.add('hidden'); 
                 renderHistory();
             }
         }
@@ -559,7 +612,6 @@
                 const carName = CAR_NAMES[item.carMain] || item.carMain;
                 const depart = item.timeDepart.replace('T', ' ');
                 const arrive = item.timeArrive.replace('T', ' ');
-                // Add active class if this item is currently previewed
                 const activeClass = (index === currentHistoryPreviewIdx) ? 'active-preview' : 'border-gray-200';
 
                 return `
