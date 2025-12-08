@@ -160,7 +160,24 @@
                         <div class="grid grid-cols-4 gap-2">
                             <div class="col-span-1">
                                 <label class="block text-[10px] text-gray-500 mb-1">類別(1)</label>
-                                <input type="text" id="t-class" maxlength="1" value="N" class="w-full p-2 border rounded text-center font-mono uppercase" oninput="updateTicketQR()">
+                                <select id="t-class" class="w-full p-2 border rounded text-center font-mono uppercase text-xs" onchange="updateTicketQR()">
+                                    <option value="A">A:一般非對號列車</option>
+                                    <option value="B">B:聯運票</option>
+                                    <option value="C">C:團體非對號車票</option>
+                                    <option value="D">D:一般郵輪式列車</option>
+                                    <option value="E">E:專開列車</option>
+                                    <option value="F">F:離線票</option>
+                                    <option value="G">G:團體對號車票</option>
+                                    <option value="H">H:團體郵輪式列車</option>
+                                    <option value="J">J:Joint-Pass</option>
+                                    <option value="L">L:月台票</option>
+                                    <option value="M">M:異級票</option>
+                                    <option value="N" selected>N:一般對號列車</option>
+                                    <option value="P">P:商品票券</option>
+                                    <option value="S">S:定期票</option>
+                                    <option value="T">T:TR Pass</option>
+                                    <option value="V">V:既有非對號自售機</option>
+                                </select>
                             </div>
                             <div class="col-span-1">
                                 <label class="block text-[10px] text-gray-500 mb-1">年份(1)</label>
