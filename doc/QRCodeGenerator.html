@@ -57,12 +57,6 @@
             font-size: 16px !important; 
         }
 
-        .history-card.active-preview {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
-        }
-
         /* Zoom Animation */
         .zoom-overlay {
             transition: opacity 0.3s ease;
@@ -78,12 +72,8 @@
         .zoom-img {
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        /* larger zoom when modal is visible */
         .zoom-overlay:not(.hidden) .zoom-img {
-            transform: scale(1.6);
-            /* allow image to grow slightly larger while respecting viewport limits */
-            max-width: 98vw; 
-            max-height: 98vh;
+            transform: scale(1);
         }
         .zoom-overlay.hidden .zoom-img {
             transform: scale(0.5);
@@ -93,9 +83,9 @@
 <body class="min-h-screen flex flex-col md:items-center md:justify-center md:p-4 bg-gray-50">
 
     <!-- Zoom Modal -->
-    <div id="zoom-modal" class="zoom-overlay hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer" onclick="closeZoom()" tabindex="-1" role="dialog" aria-modal="true" aria-hidden="true">
-        <div class="relative max-w-full max-h-full flex flex-col items-center" onclick="event.stopPropagation()">
-            <img id="zoomed-qr-img" class="zoom-img bg-white rounded-2xl shadow-2xl max-w-[98vw] max-h-[98vh] object-contain" src="" alt="Zoomed QR">
+    <div id="zoom-modal" class="zoom-overlay hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer" onclick="closeZoom()">
+        <div class="relative max-w-full max-h-full flex flex-col items-center">
+            <img id="zoomed-qr-img" class="zoom-img bg-white rounded-2xl shadow-2xl max-w-[90vw] max-h-[80vh] object-contain" src="" alt="Zoomed QR">
             <p class="text-white/70 mt-4 text-sm font-medium animate-pulse">點擊任意處關閉</p>
         </div>
     </div>
@@ -107,7 +97,7 @@
         <div class="px-4 py-4 md:px-8 md:pt-6 border-b border-gray-100 flex flex-col md:flex-row justify-between md:items-end bg-white z-20 shrink-0">
             <div class="mb-3 md:mb-0">
                 <h1 class="text-xl md:text-2xl font-bold text-gray-800">QR Code 產生中心</h1>
-                <p class="text-xs md:text-sm text-gray-500">專業票證 60 碼</p>
+                <p class="text-xs md:text-sm text-gray-500">15碼票號演算 / 60碼標準格式</p>
             </div>
             <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg self-start md:self-auto w-full md:w-auto overflow-x-auto">
                 <button onclick="switchTab('general')" id="tab-general" class="tab-btn tab-inactive">
@@ -130,15 +120,13 @@
                 
                 <!-- === TAB: GENERAL === -->
                 <div id="panel-general" class="p-5 md:p-8 hidden">
-                    
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">內容輸入</label>
-                            <textarea id="qr-input" rows="5" value="https://mds7a00.github.io/Utility/doc/QRCodeGenerator.html"
+                            <textarea id="qr-input" rows="5" 
                                 class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none bg-gray-50 font-mono text-base"
                                 placeholder="輸入文字..." oninput="updateGeneralQR()"></textarea>
                         </div>
-                        
                         <div class="grid grid-cols-2 gap-4">
                             <div class="p-3 border rounded-xl bg-gray-50">
                                 <label class="block text-xs text-gray-500 mb-1">前景色</label>
@@ -152,218 +140,201 @@
                     </div>
                 </div>
 
-                <!-- === TAB: TICKET (Complex Form) === -->
+                <!-- === TAB: TICKET (60-char Format) === -->
                 <div id="panel-ticket" class="p-4 md:p-6 space-y-6">
 
-                    <!-- Group 1: Ticket No -->
-                    <div class="space-y-4">
+                    <!-- Hash Key Config -->
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <label class="block text-xs font-bold text-blue-800 mb-1">閘門雜湊值 (8碼)</label>
+                        <input type="text" id="t-hash-key" maxlength="8" value="12345678" 
+                            class="w-full p-2 border border-blue-200 rounded-lg font-mono text-sm tracking-widest text-blue-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+                            oninput="updateTicketQR()">
+                    </div>
+
+                    <!-- Group 1: Ticket No Components (15 chars) -->
+                    <div class="space-y-4 border-b pb-6">
+                        <h3 class="text-sm font-bold text-gray-700 flex items-center">
+                            <span class="bg-gray-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2">1</span>
+                            票號組成 (15碼)
+                        </h3>
+                        <div class="grid grid-cols-4 gap-2">
+                            <div class="col-span-1">
+                                <label class="block text-[10px] text-gray-500 mb-1">類別(1)</label>
+                                <input type="text" id="t-class" maxlength="1" value="N" class="w-full p-2 border rounded text-center font-mono uppercase" oninput="updateTicketQR()">
+                            </div>
+                            <div class="col-span-1">
+                                <label class="block text-[10px] text-gray-500 mb-1">年份(1)</label>
+                                <input type="text" id="t-year" maxlength="1" readonly class="w-full p-2 border rounded text-center font-mono bg-gray-100 text-gray-500 cursor-not-allowed" title="依據開車時間自動帶入">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[10px] text-gray-500 mb-1">隨機碼(2)</label>
+                                <input type="text" id="t-random" maxlength="2" value="99" class="w-full p-2 border rounded text-center font-mono bg-yellow-50" oninput="updateTicketQR()">
+                            </div>
+                        </div>
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1.5">票號 (15碼)</label>
-                            <input type="text" id="t-ticket-no" maxlength="15" value="202312070000001" 
-                                inputmode="numeric"
-                                class="w-full p-3 border border-gray-300 rounded-xl font-mono text-lg tracking-wide focus:ring-2 focus:ring-blue-500 outline-none" 
-                                oninput="updateTicketQR()">
+                            <label class="block text-[10px] text-gray-500 mb-1 flex justify-between">
+                                <span>流水號 (9碼) - <span class="text-xs text-blue-500">自動生成: 日時分秒序</span></span>
+                                <button onclick="generateNewSerial()" class="text-blue-600 hover:underline text-[10px] bg-blue-50 px-2 rounded">重新產生</button>
+                            </label>
+                            <input type="text" id="t-serial" maxlength="9" class="w-full p-2 border rounded font-mono tracking-widest bg-gray-50" oninput="updateTicketQR()">
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1.5">Hash Key (8碼)</label>
-                            <input type="text" id="t-hash-key" maxlength="8" value="AAAAAAAA" 
-                                class="w-full p-3 border border-blue-200 bg-blue-50/50 rounded-xl font-mono text-base tracking-widest text-blue-800 focus:ring-2 focus:ring-blue-500 outline-none" 
-                                oninput="updateTicketQR()">
+                        <!-- Calculated Validation Display -->
+                        <div class="bg-gray-100 p-3 rounded-lg flex justify-between items-center">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-500">計算結果 (第12-13碼)</span>
+                                <span class="text-[10px] text-gray-400 font-mono" id="calc-log-short"></span>
+                            </div>
+                            <span class="text-xl font-bold text-red-600 font-mono" id="disp-validation-code">--</span>
                         </div>
                     </div>
 
                     <!-- Group 2: Stations -->
-                    <div class="border border-gray-200 p-4 rounded-2xl bg-white shadow-sm">
-                        <h3 class="text-xs font-bold text-gray-500 uppercase mb-4 tracking-wider border-b pb-2">車站區間</h3>
+                    <div class="border p-4 rounded-xl bg-gray-50">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 flex justify-between">
+                            車站區間 (各4碼)
+                            <span class="text-[10px] text-gray-400 font-normal">未填寫預設為 ZZZZ</span>
+                        </h3>
                         <datalist id="station-list"></datalist>
 
-                        <div class="grid grid-cols-2 gap-3 md:gap-4">
-                            <div class="col-span-1">
-                                <label class="text-xs text-gray-500 mb-1 block">異級起站</label>
-                                <input type="text" id="t-start-diff" list="station-list" placeholder="代碼" 
-                                    class="w-full p-2.5 border rounded-lg font-mono text-center uppercase focus:ring-2 focus:ring-blue-500 outline-none" oninput="updateTicketQR()">
-                            </div>
-                            <div class="col-span-1">
-                                <label class="text-xs text-blue-600 font-bold mb-1 block">主段起站</label>
-                                <input type="text" id="t-start-main" list="station-list" value="1000 臺北" 
-                                    class="w-full p-2.5 border-2 border-blue-100 bg-blue-50/30 rounded-lg font-mono text-center font-bold text-blue-900 uppercase focus:ring-2 focus:ring-blue-500 outline-none" oninput="updateTicketQR()">
-                            </div>
-                            <div class="col-span-1">
-                                <label class="text-xs text-blue-600 font-bold mb-1 block">主段訖站</label>
-                                <input type="text" id="t-end-main" list="station-list" value="4400 高雄" 
-                                    class="w-full p-2.5 border-2 border-blue-100 bg-blue-50/30 rounded-lg font-mono text-center font-bold text-blue-900 uppercase focus:ring-2 focus:ring-blue-500 outline-none" oninput="updateTicketQR()">
-                            </div>
-                            <div class="col-span-1">
-                                <label class="text-xs text-gray-500 mb-1 block">異級訖站</label>
-                                <input type="text" id="t-end-diff" list="station-list" placeholder="代碼" 
-                                    class="w-full p-2.5 border rounded-lg font-mono text-center uppercase focus:ring-2 focus:ring-blue-500 outline-none" oninput="updateTicketQR()">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Group 3: Cars -->
-                    <div class="grid grid-cols-3 gap-2 md:gap-4">
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">前段車種</label>
-                            <select id="t-car-prev" class="w-full p-2.5 border rounded-lg bg-white" onchange="updateTicketQR()">
-                                <option value="Z">Z:無</option>
-                                <option value="1">1:太魯閣</option>
-                                <option value="2">2:普悠瑪</option>
-                                <option value="3">3:自強</option>
-                                <option value="6">6:區間</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-blue-600 font-bold mb-1">主段車種</label>
-                            <select id="t-car-main" class="w-full p-2.5 border-2 border-blue-100 rounded-lg bg-white font-medium" onchange="updateTicketQR()">
-                                <option value="2" selected>2:普悠瑪</option>
-                                <option value="1">1:太魯閣</option>
-                                <option value="3">3:自強</option>
-                                <option value="B">B:新自強</option>
-                                <option value="4">4:莒光</option>
-                                <option value="6">6:區間</option>
-                                <option value="A">A:區快</option>
-                                <option value="S">S:定期票</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">後段車種</label>
-                            <select id="t-car-next" class="w-full p-2.5 border rounded-lg bg-white" onchange="updateTicketQR()">
-                                <option value="Z">Z:無</option>
-                                <option value="1">1:太魯閣</option>
-                                <option value="6">6:區間</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Group 4: Times -->
-                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">開車時間</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="datetime-local" id="t-time-depart" class="flex-1 p-2.5 border rounded-lg bg-white text-sm" onchange="updateTicketQR()">
-                                    <span id="disp-time-depart" class="font-mono text-xs text-gray-400 w-12 text-right">-----</span>
+                                <label class="text-xs text-gray-500">異級起站</label>
+                                <input type="text" id="t-start-diff" list="station-list" maxlength="4" placeholder="代碼" class="w-full p-2 border rounded font-mono text-sm text-center uppercase" oninput="updateTicketQR()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-blue-600 font-bold">主段起站</label>
+                                <input type="text" id="t-start-main" list="station-list" maxlength="4" value="1000" class="w-full p-2 border-2 border-blue-100 rounded font-mono text-sm text-center uppercase" oninput="updateTicketQR()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-blue-600 font-bold">主段訖站</label>
+                                <input type="text" id="t-end-main" list="station-list" maxlength="4" value="4400" class="w-full p-2 border-2 border-blue-100 rounded font-mono text-sm text-center uppercase" oninput="updateTicketQR()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">異級訖站</label>
+                                <input type="text" id="t-end-diff" list="station-list" maxlength="4" placeholder="代碼" class="w-full p-2 border rounded font-mono text-sm text-center uppercase" oninput="updateTicketQR()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Group 3: Cars & Times -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Car Types -->
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-gray-600">車種設定 (前/主/後)</label>
+                            <div class="flex gap-2">
+                                <select id="t-car-prev" class="flex-1 p-2 border rounded text-xs" onchange="updateTicketQR()">
+                                    <option value="Z">Z:無</option><option value="1">1:太魯閣</option><option value="2">2:普悠瑪</option><option value="3">3:自強</option><option value="6">6:區間</option>
+                                </select>
+                                <select id="t-car-main" class="flex-1 p-2 border-2 border-blue-100 rounded text-xs font-bold" onchange="updateTicketQR()">
+                                    <option value="1">1:太魯閣</option><option value="2">2:普悠瑪</option><option value="3">3:自強</option><option value="4">4:莒光</option><option value="5">5:復興</option><option value="6">6:區間</option><option value="7">7:普快</option><option value="A">A:區快</option><option value="B">B:新自強</option><option value="S">S:定期票</option>
+                                </select>
+                                <select id="t-car-next" class="flex-1 p-2 border rounded text-xs" onchange="updateTicketQR()">
+                                    <option value="Z">Z:無</option><option value="1">1:太魯閣</option><option value="6">6:區間</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Times (5 chars Base62) -->
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-gray-600">行程時間 (5碼: YMDHm)</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <input type="datetime-local" id="t-time-depart" class="w-full p-2 border rounded text-[10px]" onchange="handleTimeChange()">
+                                    <div class="text-[10px] text-right text-gray-400">Code: <span id="disp-time-depart">-----</span></div>
                                 </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">抵達時間</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="datetime-local" id="t-time-arrive" class="flex-1 p-2.5 border rounded-lg bg-white text-sm" onchange="updateTicketQR()">
-                                    <span id="disp-time-arrive" class="font-mono text-xs text-gray-400 w-12 text-right">-----</span>
+                                <div>
+                                    <input type="datetime-local" id="t-time-arrive" class="w-full p-2 border rounded text-[10px]" onchange="updateTicketQR()">
+                                    <div class="text-[10px] text-right text-gray-400">Code: <span id="disp-time-arrive">-----</span></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Group 5: Price & Purchase -->
+                    <!-- Group 4: Details Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 bg-gray-50 p-3 rounded-lg">
+                        <div>
+                            <label class="text-[10px] text-gray-500">票種</label>
+                            <select id="t-type" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
+                                <option value="1">1:全票</option><option value="2">2:孩童</option><option value="3">3:敬老</option><option value="4">4:愛心</option><option value="5">5:愛陪</option><option value="6">6:愛孩</option><option value="7">7:員工</option><option value="8">8:眷屬</option><option value="9">9:眷孩</option><option value="A">A:記帳</option><option value="B">B:國軍</option><option value="C">C:榮譽</option><option value="D">D:教師</option><option value="E">E:學生</option><option value="F">F:自行車</option><option value="Z">Z:未指定</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500">路線</label>
+                            <select id="t-dir" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
+                                <option value="1">1:順</option><option value="2">2:逆</option><option value="3">3:順海</option><option value="4">4:逆海</option><option value="5">5:順山</option><option value="6">6:逆山</option><option value="7">7:順成追</option><option value="8">8:逆成追</option><option value="9">9:順山海</option><option value="0">0:逆山海</option><option value="Z">Z:未指定</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500">付款</label>
+                            <select id="t-pay" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
+                                <option value="1">1:現金</option><option value="2">2:網刷</option><option value="3">3:現刷</option><option value="9">9:電子</option><option value="y">y:未付</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500">優惠</label>
+                            <select id="t-discount" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
+                                <option value="N">N:否</option><option value="Y">Y:是</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500">取票</label>
+                            <select id="t-pickup" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
+                                <option value="1">1:超商</option><option value="8">8:窗口</option><option value="A">A:自售</option><option value="6">6:行動</option><option value="F">F:7-11</option><option value="G">G:萊爾富</option><option value="H">H:OK</option><option value="I">I:全家</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Group 5: Price & Purchase Time -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">票價</label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
-                                <input type="number" id="t-price" value="843" inputmode="numeric" class="w-full p-3 pl-6 border border-gray-300 rounded-xl font-mono text-lg" oninput="updateTicketQR()">
-                            </div>
-                            <div class="text-[10px] text-right text-gray-400 mt-1">Code: <span id="disp-price">---</span></div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">票價 (4碼 Base62)</label>
+                            <input type="number" id="t-price" value="843" class="w-full p-2 border rounded font-mono text-sm" oninput="updateTicketQR()">
+                            <div class="text-[10px] text-gray-400 mt-1">Code: <span id="disp-price">----</span></div>
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">購票日期 (3碼)</label>
-                            <input type="date" id="t-time-buy" class="w-full p-3 border border-gray-300 rounded-xl bg-white text-sm" onchange="updateTicketQR()">
-                            <div class="text-[10px] text-right text-gray-400 mt-1">Code: <span id="disp-time-buy">---</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Group 6: Details Grid -->
-                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 pt-2">
-                        <div class="flex flex-col">
-                            <label class="text-[10px] text-gray-500 mb-1">票種</label>
-                            <select id="t-type" class="p-2 border rounded-lg text-sm bg-white" onchange="updateTicketQR()">
-                                <option value="1">1:全票</option>
-                                <option value="2">2:孩童</option>
-                                <option value="3">3:敬老</option>
-                                <option value="E">E:學生</option>
-                            </select>
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-[10px] text-gray-500 mb-1">路線</label>
-                            <select id="t-route" class="p-2 border rounded-lg text-sm bg-white" onchange="updateTicketQR()">
-                                <option value="1">1:順</option>
-                                <option value="2">2:逆</option>
-                                <option value="5">5:順山</option>
-                                <option value="6">6:逆山</option>
-                            </select>
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-[10px] text-gray-500 mb-1">付款</label>
-                            <select id="t-pay" class="p-2 border rounded-lg text-sm bg-white" onchange="updateTicketQR()">
-                                <option value="1">1:現金</option>
-                                <option value="2">2:網刷</option>
-                                <option value="9">9:電子</option>
-                                <option value="y">y:未付</option>
-                            </select>
-                        </div>
-                        <div class="flex flex-col">
-                            <label class="text-[10px] text-gray-500 mb-1">優惠</label>
-                            <select id="t-discount" class="p-2 border rounded-lg text-sm bg-white" onchange="updateTicketQR()">
-                                <option value="N">N:否</option>
-                                <option value="Y">Y:是</option>
-                            </select>
-                        </div>
-                        <div class="flex flex-col col-span-1 sm:col-span-1">
-                            <label class="text-[10px] text-gray-500 mb-1">取票</label>
-                            <select id="t-pickup" class="p-2 border rounded-lg text-sm bg-white" onchange="updateTicketQR()">
-                                <option value="1">1:超商</option>
-                                <option value="8">8:窗口</option>
-                                <option value="A">A:自售</option>
-                                <option value="6">6:行動</option>
-                            </select>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">購票時間 (3碼: MDH)</label>
+                            <input type="datetime-local" id="t-time-buy" class="w-full p-2 border rounded text-sm" onchange="updateTicketQR()">
+                            <div class="text-[10px] text-gray-400 mt-1">Code: <span id="disp-time-buy">---</span></div>
                         </div>
                     </div>
                     
-                    <div class="h-24 md:hidden"></div> <!-- Spacer for mobile sticky bottom -->
+                    <div class="h-24 md:hidden"></div>
                 </div>
 
                 <!-- === TAB: HISTORY === -->
                 <div id="panel-history" class="p-4 md:p-6 hidden">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold text-gray-800">儲存的車票 (最近 20 筆)</h2>
-                        <span class="text-xs text-gray-400">點擊「載入」可編輯，點擊「顯示QR」直接預覽</span>
+                        <h2 class="text-lg font-bold text-gray-800">儲存的車票</h2>
+                        <span class="text-xs text-gray-400">最近 20 筆</span>
                     </div>
                     <div id="history-list" class="space-y-3 pb-24">
-                        <!-- History Items populated by JS -->
-                        <div class="text-center py-10 text-gray-400">
-                            目前沒有歷史紀錄
-                        </div>
+                        <div class="text-center py-10 text-gray-400">目前沒有歷史紀錄</div>
                     </div>
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: Preview (Sticky on Mobile) -->
+            <!-- RIGHT PANEL: Preview -->
             <div class="mobile-sticky-preview absolute bottom-0 left-0 w-full md:relative md:w-2/5 md:bg-gray-50 border-t md:border-t-0 md:border-l border-gray-200 z-30">
                 <div class="p-4 md:p-8 flex flex-row md:flex-col items-center justify-between md:justify-center md:h-full gap-4">
                     
-                    <!-- QR Display (Updated for click to zoom) -->
-                    <div id="qr-preview-wrapper" class="flex flex-col items-center flex-shrink-0 cursor-pointer" onclick="toggleZoom()" title="點擊放大" tabindex="0" role="button" aria-label="點擊以放大 QR Code">
+                    <!-- QR Display -->
+                    <div class="flex flex-col items-center flex-shrink-0 cursor-pointer" onclick="toggleZoom()" title="點擊放大">
                         <div class="bg-white p-2 md:p-6 rounded-xl md:rounded-3xl shadow-sm md:shadow-xl border border-gray-100 relative group transition-transform hover:scale-[1.02]">
-                            <!-- Increased width to w-40 (160px) for mobile -->
                             <canvas id="qr-code" class="w-40 h-40 md:w-64 md:h-64 rounded-lg"></canvas>
-                            <!-- Zoom Hint Icon -->
                             <div class="absolute top-2 right-2 md:top-4 md:right-4 bg-gray-100/80 p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                 </svg>
                             </div>
-                            <!-- Success Overlay for Save -->
                             <div id="save-success" class="absolute inset-0 bg-green-500/90 rounded-lg md:rounded-xl flex flex-col items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
                                 <svg class="w-8 h-8 md:w-16 md:h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 <span class="text-xs md:text-lg font-bold">已儲存!</span>
                             </div>
                         </div>
 
-                        <!-- ECC Level Selector -->
                         <div class="mt-2 w-full max-w-[150px]" onclick="event.stopPropagation()">
-                            <label class="text-[10px] text-gray-400 block text-center mb-0.5">糾錯等級 (ECC Level)</label>
+                            <label class="text-[10px] text-gray-400 block text-center mb-0.5">糾錯等級 (ECC)</label>
                             <select id="qr-ecc-level" onchange="refreshQR()" class="w-full text-xs p-1 border rounded text-center bg-gray-50 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300">
                                 <option value="L">L (7%)</option>
                                 <option value="M" selected>M (15%)</option>
@@ -375,27 +346,20 @@
 
                     <!-- Info & Action -->
                     <div class="flex-1 min-w-0 md:w-full md:text-center flex flex-col justify-center">
-                        <!-- Preview Label -->
                         <div id="preview-label" class="text-xs font-bold text-blue-500 mb-1 hidden">正在預覽歷史紀錄</div>
-
-                         <div id="qr-raw-content" class="hidden md:block bg-gray-100 p-3 rounded-lg text-[10px] font-mono break-all text-gray-600 mb-4 border border-gray-200">
-                            <!-- Desktop raw string -->
-                        </div>
+                         <div id="qr-raw-content" class="hidden md:block bg-gray-100 p-3 rounded-lg text-[10px] font-mono break-all text-gray-600 mb-4 border border-gray-200"></div>
                         
                         <div class="md:hidden text-xs text-gray-500 mb-2 truncate font-mono" id="mobile-checksum-display">
                             Check: <span class="font-bold text-red-500" id="disp-checksum-mobile">----</span>
                         </div>
 
                         <div class="flex gap-2 w-full">
-                            <!-- SAVE Button -->
                             <button id="btn-save-ticket" onclick="saveTicketToHistory()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-bold shadow-sm active:bg-gray-50 active:scale-95 transition-all flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                 </svg>
                                 <span class="text-sm">儲存</span>
                             </button>
-
-                            <!-- DOWNLOAD Button -->
                             <button onclick="downloadQR()" class="flex-[2] bg-gray-900 text-white py-3 px-4 rounded-xl font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -403,9 +367,9 @@
                                 <span>下載</span>
                             </button>
                         </div>
-
+                        
                         <div id="ticket-checksum-display" class="hidden md:block mt-2">
-                            <span class="text-xs text-gray-400">MD5: </span>
+                            <span class="text-xs text-gray-400">末4碼 MD5: </span>
                             <span class="text-sm font-bold text-red-500 font-mono" id="disp-checksum"></span>
                         </div>
                     </div>
@@ -415,10 +379,8 @@
     </div>
 
     <script>
-        // --- CONSTANTS & CONFIG ---
         const BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        const apiKey = ""; 
-        const HISTORY_KEY = 'train_ticket_history_v1';
+        const HISTORY_KEY = 'train_ticket_history_v5_60'; 
 
         const TRA_STATIONS = {
             "0900": "基隆", "0920": "七堵", "0930": "南港", "0980": "松山",
@@ -433,83 +395,34 @@
 
         const CAR_NAMES = {
             '1': '太魯閣', '2': '普悠瑪', '3': '自強', 'B': '新自強',
-            '4': '莒光', '6': '區間', 'A': '區快', 'S': '定期票', 'Z': '無'
+            '4': '莒光', '6': '區間', '7': '普快', 'A': '區快', 'S': '定期票'
         };
 
-        // Initialize QR with default level M
         let qr = new QRious({
             element: document.getElementById('qr-code'),
-            size: 1536, // Increased for higher-res download/zoom
+            size: 600,
             value: '',
             level: 'M'
         });
 
-        let currentMode = 'ticket'; // Default to ticket for this demo context
-        let currentHistoryPreviewIdx = -1; // Track which history item is being previewed
+        let currentMode = 'ticket';
+        let currentHistoryPreviewIdx = -1;
+        let serialCounter = 0;
 
         window.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             const nowStr = now.toISOString().slice(0, 16);
-            const dateStr = now.toISOString().slice(0, 10);
-            
             document.getElementById('t-time-depart').value = nowStr;
             const arrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
             document.getElementById('t-time-arrive').value = arrival.toISOString().slice(0, 16);
-            document.getElementById('t-time-buy').value = dateStr;
-
+            document.getElementById('t-time-buy').value = nowStr;
+            
             populateStations();
-            switchTab('ticket'); // Force ticket tab active
+            generateNewSerial();
+            handleTimeChange();
+            switchTab('ticket');
             updateHistoryCount();
-
-            // Keyboard accessibility: ESC to close zoom, Enter/Space to open when preview has focus
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    closeZoom();
-                }
-            });
-
-            const previewWrap = document.getElementById('qr-preview-wrapper');
-            if (previewWrap) {
-                previewWrap.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        toggleZoom();
-                    }
-                });
-            }
         });
-
-        // --- ZOOM FUNCTIONALITY ---
-        function toggleZoom() {
-            const modal = document.getElementById('zoom-modal');
-            const zoomedImg = document.getElementById('zoomed-qr-img');
-            const canvas = document.getElementById('qr-code');
-
-            // Toggle: if visible, hide
-            if (!modal.classList.contains('hidden')) {
-                closeZoom();
-                return;
-            }
-
-            // Set image source from canvas and show
-            zoomedImg.src = canvas.toDataURL("image/png");
-            modal.classList.remove('hidden');
-            modal.setAttribute('aria-hidden', 'false');
-            // Focus the modal for keyboard actions
-            try { modal.focus(); } catch (e) {}
-            // Prevent body scroll while zoom is open
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeZoom() {
-            const modal = document.getElementById('zoom-modal');
-            modal.classList.add('hidden');
-            modal.setAttribute('aria-hidden', 'true');
-            // Re-enable body scroll
-            document.body.style.overflow = '';
-        }
-
-        // --- EXISTING LOGIC ---
 
         function populateStations() {
             const datalist = document.getElementById('station-list');
@@ -521,314 +434,108 @@
             datalist.innerHTML = options;
         }
 
-        function switchTab(mode) {
-            currentMode = mode;
-            const tabs = ['general', 'ticket', 'history'];
+        // --- SERIAL GENERATOR ---
+        function generateNewSerial() {
+            const now = new Date();
+            const D = String(now.getDate()).padStart(2, '0');
+            const H = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const count = serialCounter % 10;
+            serialCounter++;
+            const newSerial = `${D}${H}${m}${s}${count}`;
+            document.getElementById('t-serial').value = newSerial;
+            updateTicketQR();
+        }
+
+        // --- TIME & YEAR HANDLER ---
+        function handleTimeChange() {
+            const val = document.getElementById('t-time-depart').value;
+            if (val) {
+                const year = new Date(val).getFullYear();
+                const lastDigit = String(year).slice(-1);
+                document.getElementById('t-year').value = lastDigit;
+            }
+            updateTicketQR();
+        }
+
+        // --- CUSTOM HASH ALGORITHM (8 Steps) ---
+        function calculateValidation(classChar, year, serial, random, hashKey) {
+            // Step 1: Remove 1st char English -> calcSerial = Year(1) + Serial(9) = 10 digits
+            let calcSerialBase = year + serial; 
             
-            tabs.forEach(t => {
-                const btn = document.getElementById(`tab-${t}`);
-                const panel = document.getElementById(`panel-${t}`);
-                
-                if (t === mode) {
-                    btn.classList.remove('tab-inactive');
-                    btn.classList.add('tab-active');
-                    panel.classList.remove('hidden');
-                } else {
-                    btn.classList.add('tab-inactive');
-                    btn.classList.remove('tab-active');
-                    panel.classList.add('hidden');
+            // Step 2: Add Random -> R1 + calcSerial + R2 = 12 digits
+            let r1 = random.charAt(0);
+            let r2 = random.charAt(1);
+            let mixedSerial = r1 + calcSerialBase + r2; 
+            
+            // Step 3: Insert Hash Key
+            // Hash Key indices 0-7. Mixed Serial indices 0-11.
+            let h = hashKey.split('');
+            let m = mixedSerial.split('');
+            let combined = [];
+            
+            // Pattern: R o H o H o H o H o o H o H o H o H o R
+            combined.push(m[0]); // R1
+            combined.push(m[1]); // o
+            combined.push(h[0]); // H
+            combined.push(m[2]); // o
+            combined.push(h[1]); // H
+            combined.push(m[3]); // o
+            combined.push(h[2]); // H
+            combined.push(m[4]); // o
+            combined.push(h[3]); // H
+            combined.push(m[5]); // o
+            combined.push(m[6]); // o (No H here)
+            combined.push(h[4]); // H
+            combined.push(m[7]); // o
+            combined.push(h[5]); // H
+            combined.push(m[8]); // o
+            combined.push(h[6]); // H
+            combined.push(m[9]); // o
+            combined.push(h[7]); // H
+            combined.push(m[10]); // o
+            combined.push(m[11]); // R2
+            
+            let numStr = combined.join(''); // Total 20 digits
+            
+            // Helper: Pairwise addition (Disjoint)
+            function reduceDisjoint(str) {
+                let res = "";
+                for (let i = 0; i < str.length; i += 2) {
+                    if (i + 1 < str.length) {
+                        let sum = parseInt(str[i]) + parseInt(str[i+1]);
+                        res += (sum % 10).toString();
+                    } else {
+                        res += str[i]; 
+                    }
                 }
-            });
-
-            const saveBtn = document.getElementById('btn-save-ticket');
-            const checksumDisp = document.getElementById('ticket-checksum-display');
-            const previewLabel = document.getElementById('preview-label');
-
-            if (mode === 'ticket') {
-                saveBtn.classList.remove('hidden');
-                checksumDisp.classList.remove('hidden');
-                previewLabel.classList.add('hidden');
-                updateTicketQR();
-            } else if (mode === 'general') {
-                saveBtn.classList.add('hidden'); 
-                checksumDisp.classList.add('hidden');
-                previewLabel.classList.add('hidden');
-                updateGeneralQR();
-            } else if (mode === 'history') {
-                saveBtn.classList.add('hidden');
-                checksumDisp.classList.add('hidden'); 
-                renderHistory();
-            }
-        }
-
-        // Wrapper to trigger updates when Level changes
-        function refreshQR() {
-            if (currentMode === 'general') {
-                updateGeneralQR();
-            } else if (currentMode === 'ticket') {
-                updateTicketQR();
-            } else if (currentMode === 'history' && currentHistoryPreviewIdx !== -1) {
-                showHistoryQR(currentHistoryPreviewIdx);
-            }
-        }
-
-        // --- GENERAL MODE ---
-        function updateGeneralQR() {
-            const input = document.getElementById('qr-input').value || ' ';
-            const fg = document.getElementById('gen-fg').value;
-            const bg = document.getElementById('gen-bg').value;
-            const level = document.getElementById('qr-ecc-level').value;
-            
-            qr.set({ value: input, foreground: fg, background: bg, level: level });
-        }
-
-        // --- HISTORY LOGIC ---
-
-        function getHistory() {
-            try {
-                const h = localStorage.getItem(HISTORY_KEY);
-                return h ? JSON.parse(h) : [];
-            } catch (e) { return []; }
-        }
-
-        function saveTicketToHistory() {
-            const data = {
-                ticketNo: document.getElementById('t-ticket-no').value,
-                hashKey: document.getElementById('t-hash-key').value,
-                startDiff: document.getElementById('t-start-diff').value,
-                startMain: document.getElementById('t-start-main').value,
-                endMain: document.getElementById('t-end-main').value,
-                endDiff: document.getElementById('t-end-diff').value,
-                carPrev: document.getElementById('t-car-prev').value,
-                carMain: document.getElementById('t-car-main').value,
-                carNext: document.getElementById('t-car-next').value,
-                timeDepart: document.getElementById('t-time-depart').value,
-                timeArrive: document.getElementById('t-time-arrive').value,
-                type: document.getElementById('t-type').value,
-                route: document.getElementById('t-route').value,
-                pay: document.getElementById('t-pay').value,
-                discount: document.getElementById('t-discount').value,
-                pickup: document.getElementById('t-pickup').value,
-                price: document.getElementById('t-price').value,
-                timeBuy: document.getElementById('t-time-buy').value,
-                timestamp: Date.now()
-            };
-
-            const history = getHistory();
-            history.unshift(data); 
-            if (history.length > 20) history.length = 20;
-            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-
-            const successOverlay = document.getElementById('save-success');
-            successOverlay.classList.remove('opacity-0');
-            setTimeout(() => {
-                successOverlay.classList.add('opacity-0');
-            }, 1500);
-
-            updateHistoryCount();
-        }
-
-        function updateHistoryCount() {
-            const count = getHistory().length;
-            document.getElementById('history-count').innerText = count;
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            const history = getHistory();
-
-            if (history.length === 0) {
-                list.innerHTML = `<div class="text-center py-10 text-gray-400">目前沒有歷史紀錄</div>`;
-                return;
+                return res;
             }
 
-            list.innerHTML = history.map((item, index) => {
-                const carName = CAR_NAMES[item.carMain] || item.carMain;
-                const depart = item.timeDepart.replace('T', ' ');
-                const arrive = item.timeArrive.replace('T', ' ');
-                const activeClass = (index === currentHistoryPreviewIdx) ? 'active-preview' : 'border-gray-200';
-
-                return `
-                <div class="history-card bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all ${activeClass}">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">${carName}</span>
-                            <span class="text-sm font-mono text-gray-500 ml-1">$${item.price}</span>
-                        </div>
-                        <span class="text-[10px] text-gray-400">#${index + 1}</span>
-                    </div>
-                    <div class="text-sm text-gray-700 mb-1"><span class="font-bold">開</span> ${depart}</div>
-                    <div class="text-sm text-gray-700 mb-3"><span class="font-bold">抵</span> ${arrive}</div>
-                    
-                    <div class="flex gap-2">
-                        <button onclick="showHistoryQR(${index})" class="flex-1 bg-green-50 text-green-600 py-2 rounded-lg text-xs font-bold hover:bg-green-100 transition flex items-center justify-center gap-1 border border-green-200">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                             顯示 QR
-                        </button>
-                        <button onclick="loadHistoryItem(${index})" class="px-4 bg-blue-50 text-blue-600 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition border border-blue-200">
-                            載入
-                        </button>
-                        <button onclick="deleteHistoryItem(${index})" class="px-3 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition border border-red-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                    </div>
-                </div>
-                `;
-            }).join('');
-        }
-
-        // --- LOGIC REFACTOR: Shared Calculation ---
-
-        function generateTicketStringFromData(d) {
-             const ticketNo = pad(d.ticketNo, 15, '0');
-             const startDiff = pad(extractStationCode(d.startDiff), 4, 'Z');
-             const startMain = pad(extractStationCode(d.startMain), 4, '0');
-             const endMain = pad(extractStationCode(d.endMain), 4, '0');
-             const endDiff = pad(extractStationCode(d.endDiff), 4, 'Z');
-             
-             // Time Logic
-             const nonReserved = ['A','C','S','J','T','P','B','L','F'].includes(d.carMain);
-             let tDepart = getBase62Time(d.timeDepart, 'full');
-             let tArrive = getBase62Time(d.timeArrive, 'full');
-
-             if (nonReserved) {
-                 tDepart = tDepart.substring(0,3) + 'ZZ';
-                 tArrive = tArrive.substring(0,3) + 'ZZ';
-             }
-
-             const price = pad(toBase62(parseInt(d.price)||0), 4, '0');
-             const tBuy = getBase62Time(d.timeBuy, 'ymd');
-
-             const rawString = `${ticketNo}${startDiff}${startMain}${endMain}${endDiff}${d.carPrev}${d.carMain}${d.carNext}${tDepart}${tArrive}${d.type}${d.route}${d.pay}${d.discount}${d.pickup}${price}${tBuy}`;
-
-             const stringToHash = rawString + pad(d.hashKey, 8, 'A');
-             const md5Hash = CryptoJS.MD5(stringToHash).toString().toUpperCase();
-             const checksum = md5Hash.substring(md5Hash.length - 4);
-             
-             const finalString = rawString + checksum;
-             
-             const htmlDisplay = `
-                <span class="text-gray-400">${ticketNo}</span>
-                <span class="text-blue-600">${startDiff}${startMain}${endMain}${endDiff}</span>
-                <span class="text-green-600">${d.carPrev}${d.carMain}${d.carNext}</span>
-                <span>${tDepart}${tArrive}</span>...
-                <span class="text-orange-600">${tBuy}</span>
-                <span class="text-red-500 font-bold">${checksum}</span>
-            `;
-
-            return { finalString, checksum, htmlDisplay };
-        }
-
-        // --- Actions ---
-
-        function updateTicketQR() {
-            // Gather current inputs
-            const data = {
-                ticketNo: document.getElementById('t-ticket-no').value,
-                hashKey: document.getElementById('t-hash-key').value,
-                startDiff: document.getElementById('t-start-diff').value,
-                startMain: document.getElementById('t-start-main').value,
-                endMain: document.getElementById('t-end-main').value,
-                endDiff: document.getElementById('t-end-diff').value,
-                carPrev: document.getElementById('t-car-prev').value,
-                carMain: document.getElementById('t-car-main').value,
-                carNext: document.getElementById('t-car-next').value,
-                timeDepart: document.getElementById('t-time-depart').value,
-                timeArrive: document.getElementById('t-time-arrive').value,
-                type: document.getElementById('t-type').value,
-                route: document.getElementById('t-route').value,
-                pay: document.getElementById('t-pay').value,
-                discount: document.getElementById('t-discount').value,
-                pickup: document.getElementById('t-pickup').value,
-                price: document.getElementById('t-price').value,
-                timeBuy: document.getElementById('t-time-buy').value
-            };
-
-            const res = generateTicketStringFromData(data);
-            const level = document.getElementById('qr-ecc-level').value;
-            
-            // Update UI
-            document.getElementById('disp-time-depart').innerText = getBase62Time(data.timeDepart, 'full'); // Just show raw base62 for info
-            document.getElementById('disp-time-arrive').innerText = getBase62Time(data.timeArrive, 'full');
-            document.getElementById('disp-price').innerText = pad(toBase62(parseInt(data.price)||0), 4, '0');
-            document.getElementById('disp-time-buy').innerText = getBase62Time(data.timeBuy, 'ymd');
-            
-            document.getElementById('disp-checksum').innerText = res.checksum;
-            document.getElementById('disp-checksum-mobile').innerText = res.checksum;
-            document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
-            
-            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: level });
-        }
-
-        function showHistoryQR(index) {
-            const history = getHistory();
-            const item = history[index];
-            if (!item) return;
-
-            currentHistoryPreviewIdx = index;
-            renderHistory(); // Refresh list to update active border
-
-            const res = generateTicketStringFromData(item);
-            const level = document.getElementById('qr-ecc-level').value;
-            
-            // Update Preview Area (Bottom/Right)
-            document.getElementById('disp-checksum').innerText = res.checksum;
-            document.getElementById('disp-checksum-mobile').innerText = res.checksum;
-            document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
-            
-            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: level });
-
-            // Show helpers
-            document.getElementById('ticket-checksum-display').classList.remove('hidden');
-            const previewLabel = document.getElementById('preview-label');
-            previewLabel.classList.remove('hidden');
-            previewLabel.innerText = `正在預覽歷史紀錄 #${index + 1}`;
-        }
-
-        function loadHistoryItem(index) {
-            const history = getHistory();
-            const item = history[index];
-            if (!item) return;
-            
-            // Populate fields
-            document.getElementById('t-ticket-no').value = item.ticketNo;
-            document.getElementById('t-hash-key').value = item.hashKey;
-            document.getElementById('t-start-diff').value = item.startDiff;
-            document.getElementById('t-start-main').value = item.startMain;
-            document.getElementById('t-end-main').value = item.endMain;
-            document.getElementById('t-end-diff').value = item.endDiff;
-            document.getElementById('t-car-prev').value = item.carPrev;
-            document.getElementById('t-car-main').value = item.carMain;
-            document.getElementById('t-car-next').value = item.carNext;
-            document.getElementById('t-time-depart').value = item.timeDepart;
-            document.getElementById('t-time-arrive').value = item.timeArrive;
-            document.getElementById('t-type').value = item.type;
-            document.getElementById('t-route').value = item.route;
-            document.getElementById('t-pay').value = item.pay;
-            document.getElementById('t-discount').value = item.discount;
-            document.getElementById('t-pickup').value = item.pickup;
-            document.getElementById('t-price').value = item.price;
-            document.getElementById('t-time-buy').value = item.timeBuy;
-
-            currentHistoryPreviewIdx = -1; // Clear preview index since we are loading
-            switchTab('ticket');
-        }
-
-        function deleteHistoryItem(index) {
-            const history = getHistory();
-            history.splice(index, 1);
-            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-            
-            if (currentHistoryPreviewIdx === index) {
-                currentHistoryPreviewIdx = -1; // Reset if deleted item was previewed
-                document.getElementById('preview-label').classList.add('hidden');
-                qr.set({ value: '', foreground: '#fff', background: '#fff' }); // Clear QR
-            } else if (currentHistoryPreviewIdx > index) {
-                currentHistoryPreviewIdx--; // Shift index
+            // Helper: Sliding window addition
+            function reduceSliding(str) {
+                let res = "";
+                for (let i = 0; i < str.length - 1; i++) {
+                    let sum = parseInt(str[i]) + parseInt(str[i+1]);
+                    res += (sum % 10).toString();
+                }
+                return res;
             }
 
-            renderHistory();
-            updateHistoryCount();
+            // Step 5: 1st Calc (20 -> 10)
+            let s1 = reduceDisjoint(numStr);
+            
+            // Step 6: 2nd Calc (10 -> 5)
+            let s2 = reduceDisjoint(s1);
+            
+            // Step 7: 3rd Calc (5 -> 4) (Sliding)
+            let s3 = reduceSliding(s2);
+            
+            // Step 8: 4th Calc (4 -> 2) (Disjoint)
+            let s4 = reduceDisjoint(s3);
+            
+            return { code: s4, log: `Base:${calcSerialBase} -> Mix:${mixedSerial} -> Full:${numStr} -> ${s1} -> ${s2} -> ${s3} -> Result:${s4}` };
         }
 
         // --- HELPERS ---
@@ -852,42 +559,295 @@
         function extractStationCode(val) {
             if (!val) return 'ZZZZ';
             const code = val.split(' ')[0].trim();
-            if (code.length < 1) return 'ZZZZ';
-            return code;
+            return code.padEnd(4, '0').substring(0, 4);
         }
 
-        function getBase62Time(val, type = 'full') {
-            // Accepts value string directly
-            if (!val) return type === 'full' ? '00000' : '000'; 
-
+        function getBase62Time(val, type) {
+            if (!val) return type === 'full' ? '00000' : '000';
             const d = new Date(val);
             const Y = d.getFullYear() % 100; 
             const M = d.getMonth() + 1;
             const D = d.getDate();
-            
+            const H = d.getHours();
+            const m = d.getMinutes();
             const cY = BASE62_CHARS[Y % 62];
             const cM = BASE62_CHARS[M];
             const cD = BASE62_CHARS[D];
-
-            if (type === 'ymd') {
-                return `${cY}${cM}${cD}`;
-            }
-
-            const H = d.getHours();
-            const m = d.getMinutes();
             const cH = BASE62_CHARS[H];
             const cm = BASE62_CHARS[m];
+            if (type === 'buy') return `${cM}${cD}${cH}`;
             return `${cY}${cM}${cD}${cH}${cm}`;
         }
 
-        function downloadQR() {
+        // --- GENERATE STRING ---
+        function generateTicketData(d) {
+            // 1. Validation (15-char Ticket Logic)
+            const vRes = calculateValidation(d.classCode, d.year, d.serial, d.random, d.hashKey);
+            const fullTicketNo = `${d.classCode}${d.year}${d.serial}${vRes.code}${d.random}`;
+            
+            // 2. Format Times (Base62)
+            const nonReserved = ['A','C','S','J','T','P','B','L','F'].includes(d.carMain);
+            let tDep = getBase62Time(d.timeDepart, 'full');
+            let tArr = getBase62Time(d.timeArrive, 'full');
+            if (nonReserved) {
+                tDep = tDep.substring(0, 3) + 'ZZ';
+                tArr = tArr.substring(0, 3) + 'ZZ';
+            }
+            const tBuy = getBase62Time(d.timeBuy, 'buy');
+            const price = pad(toBase62(parseInt(d.price)||0), 4, '0');
+
+            // 3. Assemble 60 chars
+            const sStart = pad(extractStationCode(d.start), 4, 'Z');
+            const mStart = pad(extractStationCode(d.startMain), 4, '0');
+            const mEnd = pad(extractStationCode(d.endMain), 4, '0');
+            const sEnd = pad(extractStationCode(d.end), 4, 'Z');
+
+            const raw56 = `${fullTicketNo}${sStart}${mStart}${mEnd}${sEnd}${d.carPrev}${d.carMain}${d.carNext}${tDep}${tArr}${d.type}${d.dir}${d.pay}${d.discount}${d.pickup}${price}${tBuy}`;
+
+            // 4. MD5 Checksum (Last 4 chars)
+            const hashKey = pad(d.hashKey, 8, 'A');
+            const stringToHash = raw56 + hashKey;
+            const md5Hash = CryptoJS.MD5(stringToHash).toString().toUpperCase();
+            const checksum = md5Hash.substring(md5Hash.length - 4); 
+
+            const finalString = raw56 + checksum;
+
+            const html = `
+                <span class="text-gray-400 font-bold">${fullTicketNo}</span><br>
+                <span class="text-blue-600 text-xs">${sStart} ${mStart} ${mEnd} ${sEnd}</span>
+                <span class="text-green-600 text-xs">${d.carMain}</span>
+                <span class="text-red-500 font-bold ml-1">${checksum}</span>
+            `;
+
+            return { finalString, validationCode: vRes.code, log: vRes.log, htmlDisplay: html, checksum, tDep, tArr, price, tBuy };
+        }
+
+        // --- ACTIONS ---
+        function updateTicketQR() {
+            const data = {
+                hashKey: document.getElementById('t-hash-key').value.padEnd(8,'0'),
+                classCode: document.getElementById('t-class').value,
+                year: document.getElementById('t-year').value,
+                random: document.getElementById('t-random').value.padEnd(2,'0'),
+                serial: document.getElementById('t-serial').value.padEnd(9,'0'),
+                start: document.getElementById('t-start-diff').value,
+                startMain: document.getElementById('t-start-main').value,
+                endMain: document.getElementById('t-end-main').value,
+                end: document.getElementById('t-end-diff').value,
+                carPrev: document.getElementById('t-car-prev').value,
+                carMain: document.getElementById('t-car-main').value,
+                carNext: document.getElementById('t-car-next').value,
+                timeDepart: document.getElementById('t-time-depart').value,
+                timeArrive: document.getElementById('t-time-arrive').value,
+                type: document.getElementById('t-type').value,
+                dir: document.getElementById('t-dir').value,
+                pay: document.getElementById('t-pay').value,
+                discount: document.getElementById('t-discount').value,
+                pickup: document.getElementById('t-pickup').value,
+                price: document.getElementById('t-price').value,
+                timeBuy: document.getElementById('t-time-buy').value
+            };
+
+            const res = generateTicketData(data);
+            
+            document.getElementById('disp-validation-code').innerText = res.validationCode;
+            document.getElementById('calc-log-short').innerText = res.log.split('->').pop();
+            
+            document.getElementById('disp-time-depart').innerText = res.tDep;
+            document.getElementById('disp-time-arrive').innerText = res.tArr;
+            document.getElementById('disp-price').innerText = res.price;
+            document.getElementById('disp-time-buy').innerText = res.tBuy;
+            document.getElementById('disp-checksum').innerText = res.checksum;
+            document.getElementById('disp-checksum-mobile').innerText = res.checksum;
+            
+            document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
+
+            const level = document.getElementById('qr-ecc-level').value;
+            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: level });
+        }
+
+        // --- SHARED UI LOGIC ---
+        function toggleZoom() {
+            const modal = document.getElementById('zoom-modal');
+            const zoomedImg = document.getElementById('zoomed-qr-img');
             const canvas = document.getElementById('qr-code');
+            zoomedImg.src = canvas.toDataURL("image/png");
+            modal.classList.remove('hidden');
+        }
+        function closeZoom() { document.getElementById('zoom-modal').classList.add('hidden'); }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            ['general', 'ticket', 'history'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const panel = document.getElementById(`panel-${t}`);
+                if (t === mode) {
+                    btn.classList.remove('tab-inactive'); btn.classList.add('tab-active'); panel.classList.remove('hidden');
+                } else {
+                    btn.classList.add('tab-inactive'); btn.classList.remove('tab-active'); panel.classList.add('hidden');
+                }
+            });
+            
+            const isTicket = (mode === 'ticket');
+            document.getElementById('btn-save-ticket').classList.toggle('hidden', !isTicket);
+            document.getElementById('preview-label').classList.add('hidden');
+            document.getElementById('ticket-checksum-display').classList.toggle('hidden', mode === 'general');
+            
+            if(mode === 'ticket') {
+                // generateNewSerial(); // Optional: Auto regen on tab switch
+                updateTicketQR();
+            }
+            if(mode === 'general') updateGeneralQR();
+            if(mode === 'history') renderHistory();
+        }
+
+        function updateGeneralQR() {
+            const input = document.getElementById('qr-input').value || ' ';
+            const fg = document.getElementById('gen-fg').value;
+            const bg = document.getElementById('gen-bg').value;
+            const level = document.getElementById('qr-ecc-level').value;
+            qr.set({ value: input, foreground: fg, background: bg, level: level });
+            document.getElementById('qr-raw-content').innerText = input;
+        }
+        
+        function refreshQR() {
+            if (currentMode === 'general') updateGeneralQR();
+            else if (currentMode === 'ticket') updateTicketQR();
+            else if (currentMode === 'history' && currentHistoryPreviewIdx !== -1) showHistoryQR(currentHistoryPreviewIdx);
+        }
+
+        // --- HISTORY ---
+        function getHistory() {
+            try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e){ return []; }
+        }
+        function saveTicketToHistory() {
+            const data = {
+                ticketNo: document.getElementById('t-ticket-no').value, // This is ignored in regen, we need components
+                hashKey: document.getElementById('t-hash-key').value,
+                classCode: document.getElementById('t-class').value,
+                year: document.getElementById('t-year').value,
+                random: document.getElementById('t-random').value,
+                serial: document.getElementById('t-serial').value,
+                start: document.getElementById('t-start-diff').value,
+                startMain: document.getElementById('t-start-main').value,
+                endMain: document.getElementById('t-end-main').value,
+                end: document.getElementById('t-end-diff').value,
+                carPrev: document.getElementById('t-car-prev').value,
+                carMain: document.getElementById('t-car-main').value,
+                carNext: document.getElementById('t-car-next').value,
+                timeDepart: document.getElementById('t-time-depart').value,
+                timeArrive: document.getElementById('t-time-arrive').value,
+                type: document.getElementById('t-type').value,
+                dir: document.getElementById('t-dir').value,
+                pay: document.getElementById('t-pay').value,
+                discount: document.getElementById('t-discount').value,
+                pickup: document.getElementById('t-pickup').value,
+                price: document.getElementById('t-price').value,
+                timeBuy: document.getElementById('t-time-buy').value,
+                timestamp: Date.now()
+            };
+            const h = getHistory();
+            h.unshift(data);
+            if(h.length > 20) h.length = 20;
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+            
+            const overlay = document.getElementById('save-success');
+            overlay.classList.remove('opacity-0');
+            setTimeout(() => overlay.classList.add('opacity-0'), 1500);
+            updateHistoryCount();
+        }
+        function updateHistoryCount() {
+            document.getElementById('history-count').innerText = getHistory().length;
+        }
+        function renderHistory() {
+            const h = getHistory();
+            const list = document.getElementById('history-list');
+            if(h.length === 0) { list.innerHTML = '<div class="text-center py-10 text-gray-400">目前沒有歷史紀錄</div>'; return; }
+            
+            list.innerHTML = h.map((item, i) => {
+                const activeClass = (i === currentHistoryPreviewIdx) ? 'active-preview' : 'border-gray-200';
+                const carName = CAR_NAMES[item.carMain] || item.carMain;
+                // Pre-calc ticket no for display
+                const vRes = calculateValidation(item.classCode, item.year, item.serial, item.random, item.hashKey);
+                const tNo = `${item.classCode}${item.year}${item.serial}${vRes.code}${item.random}`;
+                
+                return `
+                <div class="history-card bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all ${activeClass}">
+                    <div class="flex justify-between mb-2">
+                        <div>
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">${carName}</span>
+                            <span class="text-sm font-mono text-gray-500 ml-1">$${item.price}</span>
+                        </div>
+                        <span class="text-xs text-gray-400">#${i+1}</span>
+                    </div>
+                    <div class="text-sm text-gray-700 mb-2 font-mono text-xs font-bold text-gray-600">${tNo}</div>
+                    <div class="flex gap-2">
+                        <button onclick="showHistoryQR(${i})" class="flex-1 bg-green-50 text-green-600 py-2 rounded-lg text-xs font-bold border border-green-200">顯示 QR</button>
+                        <button onclick="loadHistory(${i})" class="px-4 bg-blue-50 text-blue-600 py-2 rounded-lg text-xs font-bold border border-blue-200">載入</button>
+                        <button onclick="delHistory(${i})" class="px-3 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold border border-red-200">刪</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        function showHistoryQR(i) {
+            currentHistoryPreviewIdx = i;
+            renderHistory();
+            const item = getHistory()[i];
+            const res = generateTicketData(item);
+            document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
+            document.getElementById('preview-label').classList.remove('hidden');
+            document.getElementById('preview-label').innerText = `預覽紀錄 #${i+1}`;
+            
+            document.getElementById('disp-checksum').innerText = res.checksum;
+            document.getElementById('disp-checksum-mobile').innerText = res.checksum;
+
+            const level = document.getElementById('qr-ecc-level').value;
+            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: level });
+        }
+        function loadHistory(i) {
+            const item = getHistory()[i];
+            document.getElementById('t-hash-key').value = item.hashKey;
+            document.getElementById('t-class').value = item.classCode;
+            document.getElementById('t-year').value = item.year;
+            document.getElementById('t-random').value = item.random;
+            document.getElementById('t-serial').value = item.serial;
+            document.getElementById('t-start-diff').value = item.start;
+            document.getElementById('t-start-main').value = item.startMain;
+            document.getElementById('t-end-main').value = item.endMain;
+            document.getElementById('t-end-diff').value = item.end;
+            document.getElementById('t-car-prev').value = item.carPrev;
+            document.getElementById('t-car-main').value = item.carMain;
+            document.getElementById('t-car-next').value = item.carNext;
+            document.getElementById('t-time-depart').value = item.timeDepart;
+            document.getElementById('t-time-arrive').value = item.timeArrive;
+            document.getElementById('t-type').value = item.type;
+            document.getElementById('t-dir').value = item.dir;
+            document.getElementById('t-pay').value = item.pay;
+            document.getElementById('t-discount').value = item.discount;
+            document.getElementById('t-pickup').value = item.pickup;
+            document.getElementById('t-price').value = item.price;
+            document.getElementById('t-time-buy').value = item.timeBuy;
+            
+            currentHistoryPreviewIdx = -1;
+            switchTab('ticket');
+        }
+        function delHistory(i) {
+            const h = getHistory();
+            h.splice(i, 1);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+            if(currentHistoryPreviewIdx === i) {
+                currentHistoryPreviewIdx = -1;
+                document.getElementById('preview-label').classList.add('hidden');
+                qr.set({value:''});
+            } else if (currentHistoryPreviewIdx > i) currentHistoryPreviewIdx--;
+            renderHistory();
+            updateHistoryCount();
+        }
+        function downloadQR() {
             const link = document.createElement('a');
             link.download = `qrcode-${Date.now()}.png`;
-            link.href = canvas.toDataURL("image/png");
-            document.body.appendChild(link);
+            link.href = document.getElementById('qr-code').toDataURL("image/png");
             link.click();
-            document.body.removeChild(link);
         }
     </script>
 </body>
