@@ -778,6 +778,10 @@
         function renderHistory() {
             const h = getHistory();
             const list = document.getElementById('history-list');
+            // Preserve scroll position
+            const scrollContainer = list.closest('.overflow-y-auto');
+            const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+
             if(h.length === 0) { list.innerHTML = '<div class="text-center py-10 text-gray-400">目前沒有歷史紀錄</div>'; return; }
             
             list.innerHTML = h.map((item, i) => {
@@ -804,24 +808,11 @@
                     </div>
                 </div>`;
             }).join('');
-        }
-        function showHistoryQR(i) {
-            currentHistoryPreviewIdx = i;
-            renderHistory();
-            const item = getHistory()[i];
-            const res = generateTicketData(item);
-            document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
-            document.getElementById('preview-label').classList.remove('hidden');
-            document.getElementById('preview-label').innerText = `預覽紀錄 #${i+1}`;
-            
-            document.getElementById('disp-checksum').innerText = res.checksum;
-            document.getElementById('disp-checksum-mobile').innerText = res.checksum;
 
-            const level = document.getElementById('qr-ecc-level').value;
-            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: level });
+            // Restore scroll position
+            if (scrollContainer) scrollContainer.scrollTop = scrollTop;
         }
-        function loadHistory(i) {
-            const item = getHistory()[i];
+        function populateTicketForm(item) {
             document.getElementById('t-hash-key').value = item.hashKey;
             document.getElementById('t-class').value = item.classCode;
             document.getElementById('t-year').value = item.year;
@@ -843,6 +834,29 @@
             document.getElementById('t-pickup').value = item.pickup;
             document.getElementById('t-price').value = item.price;
             document.getElementById('t-time-buy').value = item.timeBuy;
+        }
+
+        function showHistoryQR(i) {
+            currentHistoryPreviewIdx = i;
+            renderHistory();
+            const item = getHistory()[i];
+            populateTicketForm(item);
+
+            const res = generateTicketData(item);
+            document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
+            document.getElementById('preview-label').classList.remove('hidden');
+            document.getElementById('preview-label').innerText = `預覽紀錄 #${i+1}`;
+            
+            document.getElementById('disp-checksum').innerText = res.checksum;
+            document.getElementById('disp-checksum-mobile').innerText = res.checksum;
+
+            const level = document.getElementById('qr-ecc-level').value;
+            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: level });
+        }
+
+        function loadHistory(i) {
+            const item = getHistory()[i];
+            populateTicketForm(item);
             
             currentHistoryPreviewIdx = -1;
             switchTab('ticket');
