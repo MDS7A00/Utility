@@ -412,7 +412,7 @@
 
         const CAR_NAMES = {
             '1': '太魯閣', '2': '普悠瑪', '3': '自強', 'B': '新自強',
-            '4': '莒光', '6': '區間', '7': '普快', 'A': '區快', 'S': '定期票'
+            '4': '莒光', '5': '復興', '6': '區間', '7': '普快', 'A': '區快', 'S': '定期票'
         };
 
         let qr = new QRious({
@@ -739,7 +739,6 @@
         }
         function saveTicketToHistory() {
             const data = {
-                ticketNo: document.getElementById('t-ticket-no').value, // This is ignored in regen, we need components
                 hashKey: document.getElementById('t-hash-key').value,
                 classCode: document.getElementById('t-class').value,
                 year: document.getElementById('t-year').value,
