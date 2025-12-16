@@ -115,8 +115,70 @@
 
         <div class="flex flex-col md:flex-row flex-1 overflow-hidden relative">
             
+            <!-- RIGHT PANEL: Preview (移到最前面) -->
+            <div class="md:relative md:w-1/3 md:bg-gray-50 md:border-r border-gray-200 md:order-1 md:overflow-y-auto">
+                <div class="p-3 md:p-4 flex flex-col items-center gap-2 pb-4">
+                    
+                    <!-- QR Display -->
+                    <div class="flex flex-col items-center flex-shrink-0 cursor-pointer w-full" onclick="toggleZoom()" title="點擊放大">
+                        <div class="bg-white p-2 md:p-3 rounded-lg md:rounded-xl shadow-sm border border-gray-100 relative group transition-transform hover:scale-[1.02]">
+                            <canvas id="qr-code" class="w-40 h-40 md:w-48 md:h-48 rounded-lg"></canvas>
+                            <div class="absolute top-2 right-2 md:top-4 md:right-4 bg-gray-100/80 p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                </svg>
+                            </div>
+                            <div id="save-success" class="absolute inset-0 bg-green-500/90 rounded-lg md:rounded-xl flex flex-col items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
+                                <svg class="w-8 h-8 md:w-16 md:h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                <span class="text-xs md:text-lg font-bold">已儲存!</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-1 w-full max-w-[120px]" onclick="event.stopPropagation()">
+                            <label class="text-[9px] text-gray-400 block text-center mb-0.5">糾錯等級</label>
+                            <select id="qr-ecc-level" onchange="refreshQR()" class="w-full text-[10px] p-0.5 border rounded text-center bg-gray-50 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300">
+                                <option value="L">L (7%)</option>
+                                <option value="M" selected>M (15%)</option>
+                                <option value="Q">Q (25%)</option>
+                                <option value="H">H (30%)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Info & Action -->
+                    <div class="w-full text-center flex flex-col gap-1.5 mt-1">
+                        <div id="preview-label" class="text-xs font-bold text-blue-500 mb-0.5 hidden">正在預覽歷史紀錄</div>
+                         <div id="qr-raw-content" class="hidden md:block bg-gray-100 p-1.5 rounded text-[9px] font-mono break-all text-gray-600 mb-1 border border-gray-200"></div>
+                        
+                        <div class="text-xs text-gray-500 font-mono bg-gray-50 p-1.5 rounded" id="mobile-checksum-display">
+                            Check: <span class="font-bold text-red-500" id="disp-checksum-mobile">----</span>
+                        </div>
+
+                        <div class="flex gap-1.5 w-full">
+                            <button id="btn-save-ticket" onclick="saveTicketToHistory()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg font-bold shadow-sm active:bg-gray-50 active:scale-95 transition-all flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                </svg>
+                                <span class="text-xs">儲存</span>
+                            </button>
+                            <button onclick="downloadQR()" class="flex-[2] bg-gray-900 text-white py-2 px-3 rounded-lg font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                <span class="text-xs">下載</span>
+                            </button>
+                        </div>
+                        
+                        <div id="ticket-checksum-display" class="bg-gray-50 p-1.5 rounded">
+                            <span class="text-[10px] text-gray-400">MD5: </span>
+                            <span class="text-xs font-bold text-red-500 font-mono" id="disp-checksum"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- LEFT PANEL: Inputs / History (Scrollable) -->
-            <div class="w-full md:w-3/5 bg-white flex flex-col overflow-y-auto pb-64 md:pb-0 md:max-h-[85vh] md:border-r border-gray-100 scroll-smooth">
+            <div class="w-full md:w-3/5 bg-white flex flex-col overflow-y-auto pb-64 md:pb-0 md:max-h-[85vh] scroll-smooth md:order-2">
                 
                 <!-- === TAB: GENERAL === -->
                 <div id="panel-general" class="p-5 md:p-8 hidden">
@@ -144,7 +206,7 @@
                 <div id="panel-ticket" class="p-4 md:p-6 space-y-6">
 
                     <!-- Hash Key Config -->
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <div id="hash-key-field" class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                         <label class="block text-xs font-bold text-blue-800 mb-1">閘門雜湊值 (8碼)</label>
                         <input type="text" id="t-hash-key" maxlength="8" value="12345678" 
                             class="w-full p-2 border border-blue-200 rounded-lg font-mono text-sm tracking-widest text-blue-900 focus:ring-2 focus:ring-blue-500 outline-none" 
@@ -153,14 +215,44 @@
 
                     <!-- Group 1: Ticket No Components (15 chars) -->
                     <div class="space-y-4 border-b pb-6">
-                        <h3 class="text-sm font-bold text-gray-700 flex items-center">
-                            <span class="bg-gray-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2">1</span>
-                            票號組成 (15碼)
+                        <h3 class="text-sm font-bold text-gray-700 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="bg-gray-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2">1</span>
+                                票號組成 (15碼)
+                            </div>
+                            <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                                <button onclick="toggleTicketMode('quick')" id="mode-quick" class="px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600">
+                                    快速選單
+                                </button>
+                                <button onclick="toggleTicketMode('basic')" id="mode-basic" class="px-3 py-1 text-xs rounded transition-all text-gray-600">
+                                    基本設定
+                                </button>
+                            </div>
                         </h3>
                         <div class="grid grid-cols-4 gap-2">
-                            <div class="col-span-1">
+                            <div class="col-span-4">
                                 <label class="block text-[10px] text-gray-500 mb-1">類別(1)</label>
-                                <select id="t-class" class="w-full p-2 border rounded text-center font-mono uppercase text-xs" onchange="updateTicketQR()">
+                                <!-- 快速選單模式：按鈕選擇 -->
+                                <div id="class-quick-mode" class="space-y-1">
+                                    <div class="grid grid-cols-2 gap-1">
+                                        <button onclick="selectQuickClass('A')" data-class="A" class="quick-class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
+                                            A<br><span class="text-[8px]">非對號</span>
+                                        </button>
+                                        <button onclick="selectQuickClass('L')" data-class="L" class="quick-class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
+                                            L<br><span class="text-[8px]">月台票</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-1">
+                                        <button onclick="selectQuickClass('N')" data-class="N" class="quick-class-btn p-2 border-2 border-blue-500 bg-blue-50 rounded text-[10px] font-mono font-bold text-blue-700">
+                                            N<br><span class="text-[8px]">對號車</span>
+                                        </button>
+                                        <button onclick="selectQuickClass('M')" data-class="M" class="quick-class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
+                                            M<br><span class="text-[8px]">異級票</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- 基本設定模式：下拉選單 -->
+                                <select id="t-class" class="hidden w-full p-2 border rounded text-center font-mono uppercase text-xs" onchange="updateTicketQR()">
                                     <option value="A">A:一般非對號列車</option>
                                     <option value="B">B:聯運票</option>
                                     <option value="C">C:團體非對號車票</option>
@@ -179,16 +271,19 @@
                                     <option value="V">V:既有非對號自售機</option>
                                 </select>
                             </div>
-                            <div class="col-span-1">
+                        </div>
+                        <div class="grid grid-cols-4 gap-2" id="year-random-container">
+                            <div class="col-span-1" id="year-field">
                                 <label class="block text-[10px] text-gray-500 mb-1">年份(1)</label>
                                 <input type="text" id="t-year" maxlength="1" readonly class="w-full p-2 border rounded text-center font-mono bg-gray-100 text-gray-500 cursor-not-allowed" title="依據開車時間自動帶入">
                             </div>
-                            <div class="col-span-2">
+                            <div class="col-span-2" id="random-field">
                                 <label class="block text-[10px] text-gray-500 mb-1">隨機碼(2)</label>
                                 <input type="text" id="t-random" maxlength="2" value="99" class="w-full p-2 border rounded text-center font-mono bg-yellow-50" oninput="updateTicketQR()">
                             </div>
+                            <div class="col-span-1"></div>
                         </div>
-                        <div>
+                        <div id="serial-field">
                             <label class="block text-[10px] text-gray-500 mb-1 flex justify-between">
                                 <span>流水號 (9碼) - <span class="text-xs text-blue-500">自動生成: 日時分秒序</span></span>
                                 <button onclick="generateNewSerial()" class="text-blue-600 hover:underline text-[10px] bg-blue-50 px-2 rounded">重新產生</button>
@@ -197,7 +292,7 @@
                         </div>
                         
                         <!-- Calculated Validation Display -->
-                        <div class="bg-gray-100 p-3 rounded-lg flex justify-between items-center">
+                        <div id="validation-display" class="bg-gray-100 p-3 rounded-lg flex justify-between items-center">
                             <div class="flex flex-col">
                                 <span class="text-xs text-gray-500">計算結果 (第12-13碼)</span>
                                 <span class="text-[10px] text-gray-400 font-mono" id="calc-log-short"></span>
@@ -282,19 +377,19 @@
                                 <option value="1">1:順</option><option value="2">2:逆</option><option value="3">3:順海</option><option value="4">4:逆海</option><option value="5">5:順山</option><option value="6">6:逆山</option><option value="7">7:順成追</option><option value="8">8:逆成追</option><option value="9">9:順山海</option><option value="0">0:逆山海</option><option value="Z">Z:未指定</option>
                             </select>
                         </div>
-                        <div>
+                        <div id="pay-field">
                             <label class="text-[10px] text-gray-500">付款</label>
                             <select id="t-pay" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
                                 <option value="1">1:現金</option><option value="2">2:網刷</option><option value="3">3:現刷</option><option value="9">9:電子</option><option value="y">y:未付</option>
                             </select>
                         </div>
-                        <div>
+                        <div id="discount-field">
                             <label class="text-[10px] text-gray-500">優惠</label>
                             <select id="t-discount" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
                                 <option value="N">N:否</option><option value="Y">Y:是</option>
                             </select>
                         </div>
-                        <div>
+                        <div id="pickup-field">
                             <label class="text-[10px] text-gray-500">取票</label>
                             <select id="t-pickup" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
                                 <option value="1">1:超商</option><option value="8">8:窗口</option><option value="A">A:自售</option><option value="6">6:行動</option><option value="F">F:7-11</option><option value="G">G:萊爾富</option><option value="H">H:OK</option><option value="I">I:全家</option>
@@ -309,7 +404,7 @@
                             <input type="number" id="t-price" value="843" class="w-full p-2 border rounded font-mono text-sm" oninput="updateTicketQR()">
                             <div class="text-[10px] text-gray-400 mt-1">Code: <span id="disp-price">----</span></div>
                         </div>
-                        <div>
+                        <div id="buy-time-field">
                             <label class="block text-xs font-bold text-gray-600 mb-1">購票時間 (3碼: MDH)</label>
                             <input type="datetime-local" id="t-time-buy" class="w-full p-2 border rounded text-sm" onchange="updateTicketQR()">
                             <div class="text-[10px] text-gray-400 mt-1">Code: <span id="disp-time-buy">---</span></div>
@@ -327,68 +422,6 @@
                     </div>
                     <div id="history-list" class="space-y-3 pb-24">
                         <div class="text-center py-10 text-gray-400">目前沒有歷史紀錄</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT PANEL: Preview -->
-            <div class="mobile-sticky-preview absolute bottom-0 left-0 w-full md:relative md:w-2/5 md:bg-gray-50 border-t md:border-t-0 md:border-l border-gray-200 z-30">
-                <div class="p-4 md:p-8 flex flex-row md:flex-col items-center justify-between md:justify-center md:h-full gap-4">
-                    
-                    <!-- QR Display -->
-                    <div class="flex flex-col items-center flex-shrink-0 cursor-pointer" onclick="toggleZoom()" title="點擊放大">
-                        <div class="bg-white p-2 md:p-6 rounded-xl md:rounded-3xl shadow-sm md:shadow-xl border border-gray-100 relative group transition-transform hover:scale-[1.02]">
-                            <canvas id="qr-code" class="w-40 h-40 md:w-64 md:h-64 rounded-lg"></canvas>
-                            <div class="absolute top-2 right-2 md:top-4 md:right-4 bg-gray-100/80 p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                </svg>
-                            </div>
-                            <div id="save-success" class="absolute inset-0 bg-green-500/90 rounded-lg md:rounded-xl flex flex-col items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
-                                <svg class="w-8 h-8 md:w-16 md:h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span class="text-xs md:text-lg font-bold">已儲存!</span>
-                            </div>
-                        </div>
-
-                        <div class="mt-2 w-full max-w-[150px]" onclick="event.stopPropagation()">
-                            <label class="text-[10px] text-gray-400 block text-center mb-0.5">糾錯等級 (ECC)</label>
-                            <select id="qr-ecc-level" onchange="refreshQR()" class="w-full text-xs p-1 border rounded text-center bg-gray-50 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300">
-                                <option value="L">L (7%)</option>
-                                <option value="M" selected>M (15%)</option>
-                                <option value="Q">Q (25%)</option>
-                                <option value="H">H (30%)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Info & Action -->
-                    <div class="flex-1 min-w-0 md:w-full md:text-center flex flex-col justify-center">
-                        <div id="preview-label" class="text-xs font-bold text-blue-500 mb-1 hidden">正在預覽歷史紀錄</div>
-                         <div id="qr-raw-content" class="hidden md:block bg-gray-100 p-3 rounded-lg text-[10px] font-mono break-all text-gray-600 mb-4 border border-gray-200"></div>
-                        
-                        <div class="md:hidden text-xs text-gray-500 mb-2 truncate font-mono" id="mobile-checksum-display">
-                            Check: <span class="font-bold text-red-500" id="disp-checksum-mobile">----</span>
-                        </div>
-
-                        <div class="flex gap-2 w-full">
-                            <button id="btn-save-ticket" onclick="saveTicketToHistory()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-bold shadow-sm active:bg-gray-50 active:scale-95 transition-all flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                                </svg>
-                                <span class="text-sm">儲存</span>
-                            </button>
-                            <button onclick="downloadQR()" class="flex-[2] bg-gray-900 text-white py-3 px-4 rounded-xl font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                <span>下載</span>
-                            </button>
-                        </div>
-                        
-                        <div id="ticket-checksum-display" class="hidden md:block mt-2">
-                            <span class="text-xs text-gray-400">末4碼 MD5: </span>
-                            <span class="text-sm font-bold text-red-500 font-mono" id="disp-checksum"></span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -425,6 +458,7 @@
         let currentMode = 'ticket';
         let currentHistoryPreviewIdx = -1;
         let serialCounter = 0;
+        let ticketInputMode = 'quick'; // 'quick' or 'basic'
 
         window.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
@@ -438,6 +472,7 @@
             generateNewSerial();
             handleTimeChange();
             switchTab('ticket');
+            toggleTicketMode('quick'); // 初始化為快速選單模式
             updateHistoryCount();
         });
 
@@ -449,6 +484,65 @@
             }
             options += `<option value="ZZZZ 未指定"></option>`;
             datalist.innerHTML = options;
+        }
+
+        // --- TICKET INPUT MODE TOGGLE ---
+        function toggleTicketMode(mode) {
+            ticketInputMode = mode;
+            const isQuick = (mode === 'quick');
+            
+            // Toggle button styles
+            document.getElementById('mode-quick').className = isQuick 
+                ? 'px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600'
+                : 'px-3 py-1 text-xs rounded transition-all text-gray-600';
+            document.getElementById('mode-basic').className = !isQuick 
+                ? 'px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600'
+                : 'px-3 py-1 text-xs rounded transition-all text-gray-600';
+            
+            // Toggle class input visibility
+            document.getElementById('class-quick-mode').classList.toggle('hidden', !isQuick);
+            document.getElementById('t-class').classList.toggle('hidden', isQuick);
+            
+            // Toggle field visibility/disable
+            document.getElementById('hash-key-field').classList.toggle('hidden', isQuick);
+            document.getElementById('year-random-container').classList.toggle('hidden', isQuick);
+            document.getElementById('serial-field').classList.toggle('hidden', isQuick);
+            document.getElementById('validation-display').classList.toggle('hidden', isQuick);
+            document.getElementById('pay-field').classList.toggle('hidden', isQuick);
+            document.getElementById('discount-field').classList.toggle('hidden', isQuick);
+            document.getElementById('pickup-field').classList.toggle('hidden', isQuick);
+            document.getElementById('buy-time-field').classList.toggle('hidden', isQuick);
+            
+            // Sync class selection between modes
+            if (isQuick) {
+                const currentClass = document.getElementById('t-class').value;
+                const quickBtn = document.querySelector(`.quick-class-btn[data-class="${currentClass}"]`);
+                if (quickBtn) {
+                    selectQuickClass(currentClass);
+                }
+            } else {
+                const selectedBtn = document.querySelector('.quick-class-btn.font-bold');
+                if (selectedBtn) {
+                    document.getElementById('t-class').value = selectedBtn.dataset.class;
+                }
+            }
+            
+            updateTicketQR();
+        }
+
+        function selectQuickClass(classCode) {
+            // Update visual selection
+            document.querySelectorAll('.quick-class-btn').forEach(btn => {
+                if (btn.dataset.class === classCode) {
+                    btn.className = 'quick-class-btn p-2 border-2 border-blue-500 bg-blue-50 rounded text-[10px] font-mono font-bold text-blue-700';
+                } else {
+                    btn.className = 'quick-class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors';
+                }
+            });
+            
+            // Update select value (for data consistency)
+            document.getElementById('t-class').value = classCode;
+            updateTicketQR();
         }
 
         // --- SERIAL GENERATOR ---
@@ -641,9 +735,16 @@
 
         // --- ACTIONS ---
         function updateTicketQR() {
+            // Get class code from either mode
+            let classCode = document.getElementById('t-class').value;
+            if (ticketInputMode === 'quick') {
+                const selectedBtn = document.querySelector('.quick-class-btn.font-bold');
+                if (selectedBtn) classCode = selectedBtn.dataset.class;
+            }
+            
             const data = {
                 hashKey: document.getElementById('t-hash-key').value.padEnd(8,'0'),
-                classCode: document.getElementById('t-class').value,
+                classCode: classCode,
                 year: document.getElementById('t-year').value,
                 random: document.getElementById('t-random').value.padEnd(2,'0'),
                 serial: document.getElementById('t-serial').value.padEnd(9,'0'),
