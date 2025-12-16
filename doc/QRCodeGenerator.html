@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -11,16 +12,33 @@
     <!-- CryptoJS for MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f9fafb; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f9fafb;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         /* Mobile-friendly scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
 
         .tab-btn {
             flex: 1;
@@ -31,109 +49,168 @@
             text-align: center;
             white-space: nowrap;
         }
+
         .tab-active {
             font-weight: 700;
             background-color: white;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             color: #2563eb;
         }
+
         .tab-inactive {
             color: #64748b;
         }
+
         .tab-inactive:hover {
             background-color: #e2e8f0;
             color: #475569;
         }
-        
+
         /* Mobile Sticky Preview Area */
         .mobile-sticky-preview {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(8px);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
         }
 
         /* Prevent iOS zoom on inputs */
-        input, select, textarea {
-            font-size: 16px !important; 
+        input,
+        select,
+        textarea {
+            font-size: 16px !important;
         }
 
         /* Zoom Animation */
         .zoom-overlay {
             transition: opacity 0.3s ease;
         }
+
         .zoom-overlay.hidden {
             opacity: 0;
             pointer-events: none;
         }
+
         .zoom-overlay:not(.hidden) {
             opacity: 1;
             pointer-events: auto;
         }
+
         .zoom-img {
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+
         .zoom-overlay:not(.hidden) .zoom-img {
             transform: scale(1);
         }
+
         .zoom-overlay.hidden .zoom-img {
             transform: scale(0.5);
         }
+
+        /* Smooth Expand/Collapse Animation */
+        .expand-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease-out, opacity 0.3s ease;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        .expand-wrapper.open {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+
+        .expand-inner {
+            min-height: 0;
+        }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col md:items-center md:justify-center md:p-4 bg-gray-50">
 
     <!-- Zoom Modal -->
-    <div id="zoom-modal" class="zoom-overlay hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer" onclick="closeZoom()">
+    <div id="zoom-modal"
+        class="zoom-overlay hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer"
+        onclick="closeZoom()">
         <div class="relative max-w-full max-h-full flex flex-col items-center">
-            <img id="zoomed-qr-img" class="zoom-img bg-white rounded-2xl shadow-2xl max-w-[90vw] max-h-[80vh] object-contain" src="" alt="Zoomed QR">
+            <img id="zoomed-qr-img"
+                class="zoom-img bg-white rounded-2xl shadow-2xl max-w-[90vw] max-h-[80vh] object-contain" src=""
+                alt="Zoomed QR">
             <p class="text-white/70 mt-4 text-sm font-medium animate-pulse">點擊任意處關閉</p>
         </div>
     </div>
 
     <!-- Main Container -->
-    <div class="bg-white w-full max-w-6xl md:rounded-3xl shadow-xl flex flex-col relative h-screen md:h-auto md:min-h-[800px] overflow-hidden">
-        
+    <div
+        class="bg-white w-full max-w-6xl md:rounded-3xl shadow-xl flex flex-col relative h-screen md:h-auto md:min-h-[800px] overflow-hidden">
+
         <!-- Header & Tabs -->
-        <div class="px-4 py-2 md:px-8 md:py-3 border-b border-gray-100 flex flex-col md:flex-row justify-between md:items-end bg-white z-20 shrink-0">
+        <div
+            class="px-4 py-2 md:px-8 md:py-3 border-b border-gray-100 flex flex-col md:flex-row justify-between md:items-end bg-white z-20 shrink-0">
             <div class="mb-2 md:mb-0 flex items-baseline gap-2">
                 <h1 class="text-lg md:text-xl font-bold text-gray-800">QR Code 產生中心</h1>
-                <p class="text-[9px] md:text-[10px] text-gray-500">15碼票號演算 / 60碼標準格式</p>
+                <p class="text-[9px] md:text-[10px] text-gray-500 hidden md:block">15碼票號演算 / 60碼標準格式</p>
             </div>
-            <div class="flex space-x-0.5 bg-gray-100 p-0.5 rounded-lg self-start md:self-auto w-full md:w-auto overflow-x-auto">
+            <div
+                class="flex space-x-0.5 bg-gray-100 p-0.5 rounded-lg self-start md:self-auto w-full md:w-auto overflow-x-auto">
                 <button onclick="switchTab('general')" id="tab-general" class="tab-btn tab-inactive">
                     一般模式
                 </button>
                 <button onclick="switchTab('ticket')" id="tab-ticket" class="tab-btn tab-active">
                     票證模式
                 </button>
-                <button onclick="switchTab('history')" id="tab-history" class="tab-btn tab-inactive flex items-center justify-center gap-1">
+                <button onclick="switchTab('history')" id="tab-history"
+                    class="tab-btn tab-inactive flex items-center justify-center gap-1">
                     <span>歷史紀錄</span>
-                    <span id="history-count" class="bg-gray-200 text-gray-600 text-[9px] px-1.5 py-0.5 rounded-full">0</span>
+                    <span id="history-count"
+                        class="bg-gray-200 text-gray-600 text-[9px] px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+                <button onclick="switchTab('settings')" id="tab-settings"
+                    class="tab-btn tab-inactive flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
                 </button>
             </div>
         </div>
 
         <div class="flex flex-col md:flex-row flex-1 overflow-hidden relative">
-            
+
             <!-- RIGHT PANEL: Preview (移到最前面) -->
             <div class="md:relative md:w-1/3 md:bg-gray-50 md:border-r border-gray-200 md:order-1 md:overflow-y-auto">
-                <div class="p-3 md:p-4 pb-4">
-                    
+                <div
+                    class="p-3 md:p-4 pb-4 sticky top-0 bg-gray-50/95 backdrop-blur z-30 md:static md:bg-transparent md:backdrop-filter-none transition-all shadow-sm md:shadow-none border-b md:border-b-0 border-gray-200">
+
                     <!-- 單行佈局: QR Code (3/4) + 按鈕 (1/4) -->
                     <div class="flex flex-col gap-3">
                         <!-- 第一行: QR Code + 儲存下載 -->
                         <div class="flex flex-row gap-2 items-center">
                             <!-- QR Code 區域 (3/4) -->
-                            <div class="flex-[3] flex justify-center cursor-pointer" onclick="toggleZoom()" title="點擊放大">
-                                <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100 relative group transition-transform hover:scale-[1.02]">
-                                    <canvas id="qr-code" class="w-32 h-32 md:w-40 md:h-40 rounded-lg"></canvas>
-                                    <div class="absolute top-2 right-2 bg-gray-100/80 p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                            <div class="flex-[3] flex justify-center cursor-pointer relative" onclick="toggleZoom()"
+                                title="點擊放大">
+                                <div
+                                    class="bg-white p-2 rounded-lg shadow-sm border border-gray-100 relative group transition-transform hover:scale-[1.02]">
+                                    <canvas id="qr-code" class="w-28 h-28 md:w-40 md:h-40 rounded-lg"></canvas>
+                                    <div
+                                        class="absolute top-2 right-2 bg-gray-100/80 p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                         </svg>
                                     </div>
-                                    <div id="save-success" class="absolute inset-0 bg-green-500/90 rounded-lg flex flex-col items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
-                                        <svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <div id="save-success"
+                                        class="absolute inset-0 bg-green-500/90 rounded-lg flex flex-col items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
+                                        <svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg>
                                         <span class="text-sm font-bold">已儲存!</span>
                                     </div>
                                 </div>
@@ -141,16 +218,22 @@
 
                             <!-- 儲存下載按鈕區 (1/4) -->
                             <div class="flex-1 flex flex-col gap-2">
-                                <button id="btn-save-ticket" onclick="saveTicketToHistory()" class="w-full bg-white border-2 border-gray-300 text-gray-700 py-2 px-2 rounded-lg font-bold shadow-sm hover:bg-gray-50 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                <button id="btn-save-ticket" onclick="saveTicketToHistory()"
+                                    class="w-full bg-white border-2 border-gray-300 text-gray-700 py-2 px-2 rounded-lg font-bold shadow-sm hover:bg-gray-50 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                     </svg>
                                     <span class="text-xs">儲存</span>
                                 </button>
-                                
-                                <button onclick="downloadQR()" class="w-full bg-gray-900 text-white py-2 px-2 rounded-lg font-bold shadow-md hover:bg-gray-800 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+
+                                <button onclick="downloadQR()"
+                                    class="w-full bg-gray-900 text-white py-2 px-2 rounded-lg font-bold shadow-md hover:bg-gray-800 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
                                     <span class="text-xs">下載</span>
                                 </button>
@@ -159,61 +242,77 @@
 
                         <!-- 第二行: 其他信息 -->
                         <div class="flex flex-col gap-2">
-                            <div id="preview-label" class="text-[10px] md:text-xs font-bold text-blue-500 hidden">正在預覽歷史紀錄</div>
-                            <div id="qr-raw-content" class="hidden md:block bg-gray-100 p-2 rounded text-[9px] font-mono break-all text-gray-600 border border-gray-200"></div>
-                            
-                            <div id="ecc-selector" class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm flex items-center gap-2" onclick="event.stopPropagation()">
+                            <div id="preview-label" class="text-[10px] md:text-xs font-bold text-blue-500 hidden">
+                                正在預覽歷史紀錄</div>
+                            <div id="qr-raw-content"
+                                class="hidden md:block bg-gray-100 p-2 rounded text-[9px] font-mono break-all text-gray-600 border border-gray-200">
+                            </div>
+
+                            <div id="ecc-selector"
+                                class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm flex items-center gap-2"
+                                onclick="event.stopPropagation()">
                                 <label class="text-[8px] text-gray-400 whitespace-nowrap">糾錯等級</label>
                                 <div class="flex gap-1 flex-1">
-                                    <button onclick="selectEccLevel('L')" data-ecc="L" class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
+                                    <button onclick="selectEccLevel('L')" data-ecc="L"
+                                        class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
                                         L<br><span class="text-[7px]">7%</span>
                                     </button>
-                                    <button onclick="selectEccLevel('M')" data-ecc="M" class="ecc-btn flex-1 p-1.5 border-2 border-blue-500 bg-blue-50 rounded text-[9px] font-mono font-bold text-blue-700">
+                                    <button onclick="selectEccLevel('M')" data-ecc="M"
+                                        class="ecc-btn flex-1 p-1.5 border-2 border-blue-500 bg-blue-50 rounded text-[9px] font-mono font-bold text-blue-700">
                                         M<br><span class="text-[7px]">15%</span>
                                     </button>
-                                    <button onclick="selectEccLevel('Q')" data-ecc="Q" class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
+                                    <button onclick="selectEccLevel('Q')" data-ecc="Q"
+                                        class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
                                         Q<br><span class="text-[7px]">25%</span>
                                     </button>
-                                    <button onclick="selectEccLevel('H')" data-ecc="H" class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
+                                    <button onclick="selectEccLevel('H')" data-ecc="H"
+                                        class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
                                         H<br><span class="text-[7px]">30%</span>
                                     </button>
                                 </div>
                             </div>
-                            
-                            <div id="check-display" class="text-xs text-gray-600 font-mono bg-white p-2 rounded-lg border border-gray-300 shadow-sm">
+
+                            <div id="check-display"
+                                class="text-xs text-gray-600 font-mono bg-white p-2 rounded-lg border border-gray-300 shadow-sm">
                                 <div class="text-[8px] text-gray-400 mb-0.5">驗證</div>
-                                <div class="text-[10px]">Check: <span class="font-bold text-red-500" id="disp-checksum-mobile">----</span></div>
+                                <div class="text-[10px]">Check: <span class="font-bold text-red-500"
+                                        id="disp-checksum-mobile">----</span></div>
                             </div>
-                            
+
                             <div id="md5-display" class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm">
                                 <div class="text-[8px] text-gray-400 mb-0.5">校驗</div>
-                                <div class="text-[10px]"><span class="text-[9px] text-gray-500">MD5: </span><span class="font-bold text-red-500 font-mono" id="disp-checksum"></span></div>
+                                <div class="text-[10px]"><span class="text-[9px] text-gray-500">MD5: </span><span
+                                        class="font-bold text-red-500 font-mono" id="disp-checksum"></span></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- LEFT PANEL: Inputs / History (Scrollable) -->
-            <div class="w-full md:w-3/5 bg-white flex flex-col overflow-y-auto pb-64 md:pb-0 md:max-h-[85vh] scroll-smooth md:order-2">
-                
+            <div
+                class="w-full md:w-3/5 bg-white flex flex-col overflow-y-auto pb-64 md:pb-0 md:max-h-[85vh] scroll-smooth md:order-2">
+
                 <!-- === TAB: GENERAL === -->
                 <div id="panel-general" class="p-5 md:p-8 hidden">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">內容輸入</label>
-                            <textarea id="qr-input" rows="5" 
+                            <textarea id="qr-input" rows="5"
                                 class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none bg-gray-50 font-mono text-base"
-                                placeholder="輸入文字..." oninput="updateGeneralQR()">https://mds7a00.github.io/Utility/doc/QRCodeGenerator.html</textarea>
+                                placeholder="輸入文字..."
+                                oninput="updateGeneralQR()">https://mds7a00.github.io/Utility/doc/QRCodeGenerator.html</textarea>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="p-3 border rounded-xl bg-gray-50">
                                 <label class="block text-xs text-gray-500 mb-1">前景色</label>
-                                <input type="color" id="gen-fg" value="#000000" class="w-full h-10 rounded cursor-pointer" onchange="updateGeneralQR()">
+                                <input type="color" id="gen-fg" value="#000000"
+                                    class="w-full h-10 rounded cursor-pointer" onchange="updateGeneralQR()">
                             </div>
                             <div class="p-3 border rounded-xl bg-gray-50">
                                 <label class="block text-xs text-gray-500 mb-1">背景色</label>
-                                <input type="color" id="gen-bg" value="#ffffff" class="w-full h-10 rounded cursor-pointer" onchange="updateGeneralQR()">
+                                <input type="color" id="gen-bg" value="#ffffff"
+                                    class="w-full h-10 rounded cursor-pointer" onchange="updateGeneralQR()">
                             </div>
                         </div>
                     </div>
@@ -222,213 +321,367 @@
                 <!-- === TAB: TICKET (60-char Format) === -->
                 <div id="panel-ticket" class="p-4 md:p-6 space-y-6">
 
-                    <!-- Hash Key Config -->
-                    <div id="hash-key-field" class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                        <label class="block text-xs font-bold text-blue-800 mb-1">閘門雜湊值 (8碼)</label>
-                        <input type="text" id="t-hash-key" maxlength="8" value="12345678" 
-                            class="w-full p-2 border border-blue-200 rounded-lg font-mono text-sm tracking-widest text-blue-900 focus:ring-2 focus:ring-blue-500 outline-none" 
-                            oninput="updateTicketQR()">
+                    <!-- Hash Key Config (In Expandable) -->
+                    <div id="hash-key-wrapper" class="expand-wrapper">
+                        <div class="expand-inner">
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
+                                <label class="block text-xs font-bold text-blue-800 mb-1">閘門雜湊值 (8碼)</label>
+                                <input type="text" id="t-hash-key" maxlength="8" value="12345678"
+                                    class="w-full p-2 border border-blue-200 rounded-lg font-mono text-sm tracking-widest text-blue-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    oninput="updateTicketQR()">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Group 1: Ticket No Components (15 chars) -->
                     <div class="space-y-4 border-b pb-6">
                         <h3 class="text-sm font-bold text-gray-700 flex items-center justify-between">
                             <div class="flex items-center">
-                                <span class="bg-gray-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2">1</span>
+                                <span
+                                    class="bg-gray-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2">1</span>
                                 票號組成 (15碼)
                             </div>
                             <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
-                                <button onclick="toggleTicketMode('quick')" id="mode-quick" class="px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600">
+                                <button onclick="toggleTicketMode('quick')" id="mode-quick"
+                                    class="px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600">
                                     快速選單
                                 </button>
-                                <button onclick="toggleTicketMode('basic')" id="mode-basic" class="px-3 py-1 text-xs rounded transition-all text-gray-600">
+                                <button onclick="toggleTicketMode('basic')" id="mode-basic"
+                                    class="px-3 py-1 text-xs rounded transition-all text-gray-600">
                                     基本設定
                                 </button>
                             </div>
                         </h3>
                         <div class="grid grid-cols-4 gap-2">
                             <div class="col-span-4">
-                                <label class="block text-[10px] text-gray-500 mb-1">類別(1)</label>
-                                <!-- 快速選單模式：按鈕選擇 -->
-                                <div id="class-quick-mode" class="space-y-1">
+                                <label class="block text-[10px] text-gray-500 mb-1">車種類別(1)</label>
+                                <!-- 常駐顯示：快速按鈕 -->
+                                <div class="grid grid-cols-2 gap-1 mb-2">
                                     <div class="grid grid-cols-2 gap-1">
-                                        <button onclick="selectQuickClass('A')" data-class="A" class="quick-class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
+                                        <button onclick="selectClass('A')" data-class="A"
+                                            class="class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
                                             A<br><span class="text-[8px]">非對號</span>
                                         </button>
-                                        <button onclick="selectQuickClass('L')" data-class="L" class="quick-class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
+                                        <button onclick="selectClass('L')" data-class="L"
+                                            class="class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
                                             L<br><span class="text-[8px]">月台票</span>
                                         </button>
                                     </div>
                                     <div class="grid grid-cols-2 gap-1">
-                                        <button onclick="selectQuickClass('N')" data-class="N" class="quick-class-btn p-2 border-2 border-blue-500 bg-blue-50 rounded text-[10px] font-mono font-bold text-blue-700">
+                                        <button onclick="selectClass('N')" data-class="N"
+                                            class="class-btn p-2 border-2 border-blue-500 bg-blue-50 rounded text-[10px] font-mono font-bold text-blue-700">
                                             N<br><span class="text-[8px]">對號車</span>
                                         </button>
-                                        <button onclick="selectQuickClass('M')" data-class="M" class="quick-class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
+                                        <button onclick="selectClass('M')" data-class="M"
+                                            class="class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
                                             M<br><span class="text-[8px]">異級票</span>
                                         </button>
                                     </div>
                                 </div>
-                                <!-- 基本設定模式：下拉選單 -->
-                                <select id="t-class" class="hidden w-full p-2 border rounded text-center font-mono uppercase text-xs" onchange="updateTicketQR()">
-                                    <option value="A">A:一般非對號列車</option>
-                                    <option value="B">B:聯運票</option>
-                                    <option value="C">C:團體非對號車票</option>
-                                    <option value="D">D:一般郵輪式列車</option>
-                                    <option value="E">E:專開列車</option>
-                                    <option value="F">F:離線票</option>
-                                    <option value="G">G:團體對號車票</option>
-                                    <option value="H">H:團體郵輪式列車</option>
-                                    <option value="J">J:Joint-Pass</option>
-                                    <option value="L">L:月台票</option>
-                                    <option value="M">M:異級票</option>
-                                    <option value="N" selected>N:一般對號列車</option>
-                                    <option value="P">P:商品票券</option>
-                                    <option value="S">S:定期票</option>
-                                    <option value="T">T:TR Pass</option>
-                                    <option value="V">V:既有非對號自售機</option>
-                                </select>
+
+                                <!-- 進階：完整下拉選單 (只在基本設定顯示) -->
+                                <div id="advanced-class-select" class="expand-wrapper">
+                                    <div class="expand-inner">
+                                        <label class="block text-[9px] text-gray-400 mb-1">其他類別</label>
+                                        <select id="t-class"
+                                            class="w-full p-2 border rounded text-center font-mono uppercase text-xs bg-gray-50"
+                                            onchange="syncClassFromSelect()">
+                                            <option value="A">A:一般非對號列車</option>
+                                            <option value="B">B:聯運票</option>
+                                            <option value="C">C:團體非對號車票</option>
+                                            <option value="D">D:一般郵輪式列車</option>
+                                            <option value="E">E:專開列車</option>
+                                            <option value="F">F:離線票</option>
+                                            <option value="G">G:團體對號車票</option>
+                                            <option value="H">H:團體郵輪式列車</option>
+                                            <option value="J">J:Joint-Pass</option>
+                                            <option value="L">L:月台票</option>
+                                            <option value="M">M:異級票</option>
+                                            <option value="N" selected>N:一般對號列車</option>
+                                            <option value="P">P:商品票券</option>
+                                            <option value="S">S:定期票</option>
+                                            <option value="T">T:TR Pass</option>
+                                            <option value="V">V:既有非對號自售機</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-4 gap-2" id="year-random-container">
-                            <div class="col-span-1" id="year-field">
-                                <label class="block text-[10px] text-gray-500 mb-1">年份(1)</label>
-                                <input type="text" id="t-year" maxlength="1" readonly class="w-full p-2 border rounded text-center font-mono bg-gray-100 text-gray-500 cursor-not-allowed" title="依據開車時間自動帶入">
+
+                        <!-- 可收折區域：基本設定詳情 -->
+                        <div id="basic-settings-group" class="expand-wrapper">
+                            <div class="expand-inner space-y-4 pt-2">
+                                <div class="grid grid-cols-4 gap-2">
+                                    <div class="col-span-1">
+                                        <label class="block text-[10px] text-gray-500 mb-1">年份(1)</label>
+                                        <input type="text" id="t-year" maxlength="1" readonly
+                                            class="w-full p-2 border rounded text-center font-mono bg-gray-100 text-gray-500 cursor-not-allowed"
+                                            title="依據開車時間自動帶入">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-[10px] text-gray-500 mb-1">隨機碼(2)</label>
+                                        <input type="text" id="t-random" maxlength="2" value="99"
+                                            class="w-full p-2 border rounded text-center font-mono bg-yellow-50"
+                                            oninput="updateTicketQR()">
+                                    </div>
+                                    <div class="col-span-1"></div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[10px] text-gray-500 mb-1 flex justify-between">
+                                        <span>流水號 (9碼) - <span class="text-xs text-blue-500">自動生成</span></span>
+                                        <button onclick="generateNewSerial()"
+                                            class="text-blue-600 hover:underline text-[10px] bg-blue-50 px-2 rounded">重新產生</button>
+                                    </label>
+                                    <input type="text" id="t-serial" maxlength="9"
+                                        class="w-full p-2 border rounded font-mono tracking-widest bg-gray-50"
+                                        oninput="updateTicketQR()">
+                                </div>
+
+                                <!-- Calculated Validation Display -->
+                                <div class="bg-gray-100 p-3 rounded-lg flex justify-between items-center">
+                                    <div class="flex flex-col">
+                                        <span class="text-xs text-gray-500">計算結果 (第12-13碼)</span>
+                                        <span class="text-[10px] text-gray-400 font-mono" id="calc-log-short"></span>
+                                    </div>
+                                    <span class="text-xl font-bold text-red-600 font-mono"
+                                        id="disp-validation-code">--</span>
+                                </div>
                             </div>
-                            <div class="col-span-2" id="random-field">
-                                <label class="block text-[10px] text-gray-500 mb-1">隨機碼(2)</label>
-                                <input type="text" id="t-random" maxlength="2" value="99" class="w-full p-2 border rounded text-center font-mono bg-yellow-50" oninput="updateTicketQR()">
-                            </div>
-                            <div class="col-span-1"></div>
-                        </div>
-                        <div id="serial-field">
-                            <label class="block text-[10px] text-gray-500 mb-1 flex justify-between">
-                                <span>流水號 (9碼) - <span class="text-xs text-blue-500">自動生成: 日時分秒序</span></span>
-                                <button onclick="generateNewSerial()" class="text-blue-600 hover:underline text-[10px] bg-blue-50 px-2 rounded">重新產生</button>
-                            </label>
-                            <input type="text" id="t-serial" maxlength="9" class="w-full p-2 border rounded font-mono tracking-widest bg-gray-50" oninput="updateTicketQR()">
-                        </div>
-                        
-                        <!-- Calculated Validation Display -->
-                        <div id="validation-display" class="bg-gray-100 p-3 rounded-lg flex justify-between items-center">
-                            <div class="flex flex-col">
-                                <span class="text-xs text-gray-500">計算結果 (第12-13碼)</span>
-                                <span class="text-[10px] text-gray-400 font-mono" id="calc-log-short"></span>
-                            </div>
-                            <span class="text-xl font-bold text-red-600 font-mono" id="disp-validation-code">--</span>
                         </div>
                     </div>
 
                     <!-- Group 2: Stations -->
-                    <div class="border p-4 rounded-xl bg-gray-50">
-                        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 flex justify-between">
-                            車站區間 (各4碼)
-                            <span class="text-[10px] text-gray-400 font-normal">未填寫預設為 ZZZZ</span>
-                        </h3>
-                        <datalist id="station-list"></datalist>
+                    <div id="wrapper-stations" class="expand-wrapper open">
+                        <div class="expand-inner">
+                            <div class="border p-4 rounded-xl bg-gray-50">
+                                <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 flex justify-between">
+                                    車站區間 (各4碼)
+                                    <span class="text-[10px] text-gray-400 font-normal">未填寫預設為 ZZZZ</span>
+                                </h3>
+                                <datalist id="station-list"></datalist>
 
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div>
-                                <label class="text-xs text-gray-500">異級起站</label>
-                                <input type="text" id="t-start-diff" list="station-list" maxlength="4" placeholder="代碼" class="w-full p-2 border rounded font-mono text-sm text-center uppercase" oninput="updateTicketQR()">
-                            </div>
-                            <div>
-                                <label class="text-xs text-blue-600 font-bold">主段起站</label>
-                                <input type="text" id="t-start-main" list="station-list" maxlength="4" value="1000" class="w-full p-2 border-2 border-blue-100 rounded font-mono text-sm text-center uppercase" oninput="updateTicketQR()">
-                            </div>
-                            <div>
-                                <label class="text-xs text-blue-600 font-bold">主段訖站</label>
-                                <input type="text" id="t-end-main" list="station-list" maxlength="4" value="4400" class="w-full p-2 border-2 border-blue-100 rounded font-mono text-sm text-center uppercase" oninput="updateTicketQR()">
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500">異級訖站</label>
-                                <input type="text" id="t-end-diff" list="station-list" maxlength="4" placeholder="代碼" class="w-full p-2 border rounded font-mono text-sm text-center uppercase" oninput="updateTicketQR()">
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div>
+                                        <label class="text-xs text-gray-500">異級起站</label>
+                                        <input type="text" id="t-start-diff" list="station-list" maxlength="4"
+                                            placeholder="代碼"
+                                            class="w-full p-2 border rounded font-mono text-sm text-center uppercase"
+                                            oninput="updateTicketQR()">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-blue-600 font-bold">主段起站</label>
+                                        <input type="text" id="t-start-main" list="station-list" maxlength="4"
+                                            value="1000"
+                                            class="w-full p-2 border-2 border-blue-100 rounded font-mono text-sm text-center uppercase"
+                                            oninput="updateTicketQR()">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-blue-600 font-bold">主段訖站</label>
+                                        <input type="text" id="t-end-main" list="station-list" maxlength="4"
+                                            value="4400"
+                                            class="w-full p-2 border-2 border-blue-100 rounded font-mono text-sm text-center uppercase"
+                                            oninput="updateTicketQR()">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500">異級訖站</label>
+                                        <input type="text" id="t-end-diff" list="station-list" maxlength="4"
+                                            placeholder="代碼"
+                                            class="w-full p-2 border rounded font-mono text-sm text-center uppercase"
+                                            oninput="updateTicketQR()">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Group 3: Cars & Times -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="wrapper-cars" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Car Types -->
                         <div class="space-y-3">
                             <label class="block text-xs font-bold text-gray-600">車種設定 (前/主/後)</label>
                             <div class="flex gap-2">
-                                <select id="t-car-prev" class="flex-1 p-2 border rounded text-xs" onchange="updateTicketQR()">
-                                    <option value="Z">Z:無</option><option value="1">1:太魯閣</option><option value="2">2:普悠瑪</option><option value="3">3:自強</option><option value="6">6:區間</option>
+                                <select id="t-car-prev" class="flex-1 p-2 border rounded text-xs"
+                                    onchange="updateTicketQR()">
+                                    <option value="Z">Z:無</option>
+                                    <option value="1">1:太魯閣</option>
+                                    <option value="2">2:普悠瑪</option>
+                                    <option value="3">3:自強</option>
+                                    <option value="6">6:區間</option>
                                 </select>
-                                <select id="t-car-main" class="flex-1 p-2 border-2 border-blue-100 rounded text-xs font-bold" onchange="updateTicketQR()">
-                                    <option value="1">1:太魯閣</option><option value="2">2:普悠瑪</option><option value="3">3:自強</option><option value="4">4:莒光</option><option value="5">5:復興</option><option value="6">6:區間</option><option value="7">7:普快</option><option value="A">A:區快</option><option value="B">B:新自強</option><option value="S">S:定期票</option>
+                                <select id="t-car-main"
+                                    class="flex-1 p-2 border-2 border-blue-100 rounded text-xs font-bold"
+                                    onchange="updateTicketQR()">
+                                    <option value="1">1:太魯閣</option>
+                                    <option value="2">2:普悠瑪</option>
+                                    <option value="3">3:自強</option>
+                                    <option value="4">4:莒光</option>
+                                    <option value="5">5:復興</option>
+                                    <option value="6">6:區間</option>
+                                    <option value="7">7:普快</option>
+                                    <option value="A">A:區快</option>
+                                    <option value="B">B:新自強</option>
+                                    <option value="S">S:定期票</option>
                                 </select>
-                                <select id="t-car-next" class="flex-1 p-2 border rounded text-xs" onchange="updateTicketQR()">
-                                    <option value="Z">Z:無</option><option value="1">1:太魯閣</option><option value="6">6:區間</option>
+                                <select id="t-car-next" class="flex-1 p-2 border rounded text-xs"
+                                    onchange="updateTicketQR()">
+                                    <option value="Z">Z:無</option>
+                                    <option value="1">1:太魯閣</option>
+                                    <option value="6">6:區間</option>
                                 </select>
                             </div>
                         </div>
 
                         <!-- Times (5 chars Base62) -->
-                        <div class="space-y-3">
+                        <div id="wrapper-times" class="space-y-3">
                             <label class="block text-xs font-bold text-gray-600">行程時間 (5碼: YMDHm)</label>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <input type="datetime-local" id="t-time-depart" class="w-full p-2 border rounded text-[10px]" onchange="handleTimeChange()">
-                                    <div class="text-[10px] text-right text-gray-400">Code: <span id="disp-time-depart">-----</span></div>
+                                    <input type="datetime-local" id="t-time-depart"
+                                        class="w-full p-2 border rounded text-[10px]" onchange="handleTimeChange()">
+                                    <div class="text-[10px] text-right text-gray-400">Code: <span
+                                            id="disp-time-depart">-----</span></div>
                                 </div>
                                 <div>
-                                    <input type="datetime-local" id="t-time-arrive" class="w-full p-2 border rounded text-[10px]" onchange="updateTicketQR()">
-                                    <div class="text-[10px] text-right text-gray-400">Code: <span id="disp-time-arrive">-----</span></div>
+                                    <input type="datetime-local" id="t-time-arrive"
+                                        class="w-full p-2 border rounded text-[10px]" onchange="updateTicketQR()">
+                                    <div class="text-[10px] text-right text-gray-400">Code: <span
+                                            id="disp-time-arrive">-----</span></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Group 4: Details Grid -->
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 bg-gray-50 p-3 rounded-lg">
+                    <div id="wrapper-details" class="grid grid-cols-2 md:grid-cols-5 gap-3 bg-gray-50 p-3 rounded-lg">
                         <div>
                             <label class="text-[10px] text-gray-500">票種</label>
                             <select id="t-type" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
-                                <option value="1">1:全票</option><option value="2">2:孩童</option><option value="3">3:敬老</option><option value="4">4:愛心</option><option value="5">5:愛陪</option><option value="6">6:愛孩</option><option value="7">7:員工</option><option value="8">8:眷屬</option><option value="9">9:眷孩</option><option value="A">A:記帳</option><option value="B">B:國軍</option><option value="C">C:榮譽</option><option value="D">D:教師</option><option value="E">E:學生</option><option value="F">F:自行車</option><option value="Z">Z:未指定</option>
+                                <option value="1">1:全票</option>
+                                <option value="2">2:孩童</option>
+                                <option value="3">3:敬老</option>
+                                <option value="4">4:愛心</option>
+                                <option value="5">5:愛陪</option>
+                                <option value="6">6:愛孩</option>
+                                <option value="7">7:員工</option>
+                                <option value="8">8:眷屬</option>
+                                <option value="9">9:眷孩</option>
+                                <option value="A">A:記帳</option>
+                                <option value="B">B:國軍</option>
+                                <option value="C">C:榮譽</option>
+                                <option value="D">D:教師</option>
+                                <option value="E">E:學生</option>
+                                <option value="F">F:自行車</option>
+                                <option value="Z">Z:未指定</option>
                             </select>
                         </div>
                         <div>
                             <label class="text-[10px] text-gray-500">路線</label>
                             <select id="t-dir" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
-                                <option value="1">1:順</option><option value="2">2:逆</option><option value="3">3:順海</option><option value="4">4:逆海</option><option value="5">5:順山</option><option value="6">6:逆山</option><option value="7">7:順成追</option><option value="8">8:逆成追</option><option value="9">9:順山海</option><option value="0">0:逆山海</option><option value="Z">Z:未指定</option>
-                            </select>
-                        </div>
-                        <div id="pay-field">
-                            <label class="text-[10px] text-gray-500">付款</label>
-                            <select id="t-pay" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
-                                <option value="1">1:現金</option><option value="2">2:網刷</option><option value="3">3:現刷</option><option value="9">9:電子</option><option value="y">y:未付</option>
-                            </select>
-                        </div>
-                        <div id="discount-field">
-                            <label class="text-[10px] text-gray-500">優惠</label>
-                            <select id="t-discount" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
-                                <option value="N">N:否</option><option value="Y">Y:是</option>
-                            </select>
-                        </div>
-                        <div id="pickup-field">
-                            <label class="text-[10px] text-gray-500">取票</label>
-                            <select id="t-pickup" class="w-full p-1.5 border rounded text-xs" onchange="updateTicketQR()">
-                                <option value="1">1:超商</option><option value="8">8:窗口</option><option value="A">A:自售</option><option value="6">6:行動</option><option value="F">F:7-11</option><option value="G">G:萊爾富</option><option value="H">H:OK</option><option value="I">I:全家</option>
+                                <option value="1">1:順</option>
+                                <option value="2">2:逆</option>
+                                <option value="3">3:順海</option>
+                                <option value="4">4:逆海</option>
+                                <option value="5">5:順山</option>
+                                <option value="6">6:逆山</option>
+                                <option value="7">7:順成追</option>
+                                <option value="8">8:逆成追</option>
+                                <option value="9">9:順山海</option>
+                                <option value="0">0:逆山海</option>
+                                <option value="Z">Z:未指定</option>
                             </select>
                         </div>
                     </div>
 
                     <!-- Group 5: Price & Purchase Time -->
-                    <div class="grid grid-cols-2 gap-4">
+                    <div id="wrapper-price" class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 mb-1">票價 (4碼 Base62)</label>
-                            <input type="number" id="t-price" value="843" class="w-full p-2 border rounded font-mono text-sm" oninput="updateTicketQR()">
-                            <div class="text-[10px] text-gray-400 mt-1">Code: <span id="disp-price">----</span></div>
+                            <input type="number" id="t-price" value="843"
+                                class="w-full p-2 border rounded font-mono text-sm" oninput="updateTicketQR()">
+                            <div class="text-[10px] text-gray-400 mt-1">Code: <span id="disp-price">----</span>
+                            </div>
                         </div>
-                        <div id="buy-time-field">
-                            <label class="block text-xs font-bold text-gray-600 mb-1">購票時間 (3碼: MDH)</label>
-                            <input type="datetime-local" id="t-time-buy" class="w-full p-2 border rounded text-sm" onchange="updateTicketQR()">
-                            <div class="text-[10px] text-gray-400 mt-1">Code: <span id="disp-time-buy">---</span></div>
+
+                        <div id="buy-time-wrapper" class="expand-wrapper">
+                            <div class="expand-inner">
+                                <label class="block text-xs font-bold text-gray-600 mb-1">購票時間 (3碼:
+                                    MDH)</label>
+                                <input type="datetime-local" id="t-time-buy" class="w-full p-2 border rounded text-sm"
+                                    onchange="updateTicketQR()">
+                                <div class="text-[10px] text-gray-400 mt-1">Code: <span id="disp-time-buy">---</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Advanced Pay/Discount/Pickup (Wrapped) -->
+                    <div id="advanced-details-wrapper" class="expand-wrapper">
+                        <div class="expand-inner">
+                            <div class="grid grid-cols-3 gap-3 bg-gray-50 p-3 rounded-lg mt-4">
+                                <div>
+                                    <label class="text-[10px] text-gray-500">付款</label>
+                                    <select id="t-pay" class="w-full p-1.5 border rounded text-xs"
+                                        onchange="updateTicketQR()">
+                                        <option value="1">1:現金</option>
+                                        <option value="2">2:網刷</option>
+                                        <option value="3">3:現刷</option>
+                                        <option value="9">9:電子</option>
+                                        <option value="y">y:未付</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-gray-500">優惠</label>
+                                    <select id="t-discount" class="w-full p-1.5 border rounded text-xs"
+                                        onchange="updateTicketQR()">
+                                        <option value="N">N:否</option>
+                                        <option value="Y">Y:是</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-gray-500">取票</label>
+                                    <select id="t-pickup" class="w-full p-1.5 border rounded text-xs"
+                                        onchange="updateTicketQR()">
+                                        <option value="1">1:超商</option>
+                                        <option value="8">8:窗口</option>
+                                        <option value="A">A:自售</option>
+                                        <option value="6">6:行動</option>
+                                        <option value="F">F:7-11</option>
+                                        <option value="G">G:萊爾富</option>
+                                        <option value="H">H:OK</option>
+                                        <option value="I">I:全家</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="h-24 md:hidden"></div>
+                </div>
+
+                <!-- === TAB: SETTINGS === -->
+                <div id="panel-settings" class="p-4 md:p-6 hidden">
+                    <h2 class="text-lg font-bold text-gray-800 mb-2">介面顯示設定</h2>
+                    <p class="text-xs text-gray-500 mb-6">自訂「快速選單」與「基本設定」模式下顯示的欄位。</p>
+
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <!-- Header -->
+                        <div class="grid grid-cols-3 gap-2 mb-4 border-b pb-2">
+                            <div class="text-xs font-bold text-gray-400">欄位群組</div>
+                            <div class="text-xs font-bold text-center text-blue-600">快速選單</div>
+                            <div class="text-xs font-bold text-center text-gray-600">基本設定</div>
+                        </div>
+
+                        <!-- Config Items Container -->
+                        <div id="config-items-container" class="space-y-4">
+                            <!-- Items will be injected by JS -->
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-2">
+                        <button onclick="resetSettings()"
+                            class="px-4 py-2 text-xs font-bold text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition">重置預設</button>
+                    </div>
                 </div>
 
                 <!-- === TAB: HISTORY === -->
@@ -447,7 +700,7 @@
 
     <script>
         const BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        const HISTORY_KEY = 'train_ticket_history_v5_60'; 
+        const HISTORY_KEY = 'train_ticket_history_v5_60';
 
         const TRA_STATIONS = {
             "0900": "基隆", "0920": "七堵", "0930": "南港", "0980": "松山",
@@ -478,6 +731,34 @@
         let ticketInputMode = 'quick'; // 'quick' or 'basic'
         let currentEccLevel = 'M'; // 當前糾錯等級
 
+        // --- CONFIGURATION ---
+        const CONFIG_KEY = 'qr_config_v2'; // Bump version
+        const CLASS_OPTIONS = [
+            { v: 'A', t: 'A:一般非對號列車' }, { v: 'B', t: 'B:聯運票' }, { v: 'C', t: 'C:團體非對號車票' },
+            { v: 'D', t: 'D:一般郵輪式列車' }, { v: 'E', t: 'E:專開列車' }, { v: 'F', t: 'F:離線票' },
+            { v: 'G', t: 'G:團體對號車票' }, { v: 'H', t: 'H:團體郵輪式列車' }, { v: 'J', t: 'J:Joint-Pass' },
+            { v: 'L', t: 'L:月台票' }, { v: 'M', t: 'M:異級票' }, { v: 'N', t: 'N:一般對號列車' },
+            { v: 'P', t: 'P:商品票券' }, { v: 'S', t: 'S:定期票' }, { v: 'T', t: 'T:TR Pass' },
+            { v: 'V', t: 'V:既有非對號自售機' }
+        ];
+
+        const DEFAULT_CONFIG = [
+            { id: 'hash-key-wrapper', label: '閘門雜湊值', quick: false, basic: true },
+            { id: 'advanced-class-select', label: '更多類別 (下拉選單)', quick: false, basic: true },
+            { id: 'ecc-selector', label: '糾錯等級 (L/M/Q/H)', quick: false, basic: false }, // User requested checkable
+            { id: 'basic-settings-group', label: '年份/隨機/流水號', quick: false, basic: true },
+            { id: 'wrapper-stations', label: '車站區間', quick: true, basic: true },
+            { id: 'wrapper-cars', label: '車種設定', quick: true, basic: true },
+            { id: 'wrapper-times', label: '行程時間', quick: true, basic: true },
+            { id: 'wrapper-details', label: '票種/路線', quick: true, basic: true },
+            { id: 'wrapper-price', label: '票價', quick: true, basic: true },
+            { id: 'advanced-details-wrapper', label: '付款/優惠/取票', quick: false, basic: true },
+            { id: 'buy-time-wrapper', label: '購票時間', quick: false, basic: true },
+        ];
+
+        let uiConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+        let visibleClasses = CLASS_OPTIONS.map(o => o.v); // Default all visible
+
         window.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             const nowStr = now.toISOString().slice(0, 16);
@@ -485,13 +766,16 @@
             const arrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
             document.getElementById('t-time-arrive').value = arrival.toISOString().slice(0, 16);
             document.getElementById('t-time-buy').value = nowStr;
-            
+
             populateStations();
+            loadSettings();
             generateNewSerial();
             handleTimeChange();
             switchTab('ticket');
             toggleTicketMode('quick'); // 初始化為快速選單模式
+            selectClass('N'); // Default class
             updateHistoryCount();
+            renderSettingsUI();
         });
 
         function populateStations() {
@@ -504,82 +788,211 @@
             datalist.innerHTML = options;
         }
 
-        // --- TICKET INPUT MODE TOGGLE ---
+        // --- TICKET INPUT MODE TOGGLE (Smooth Transition) ---
         function toggleTicketMode(mode) {
             ticketInputMode = mode;
             const isQuick = (mode === 'quick');
-            
+
             // Toggle button styles
-            document.getElementById('mode-quick').className = isQuick 
+            document.getElementById('mode-quick').className = isQuick
                 ? 'px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600'
                 : 'px-3 py-1 text-xs rounded transition-all text-gray-600';
-            document.getElementById('mode-basic').className = !isQuick 
+            document.getElementById('mode-basic').className = !isQuick
                 ? 'px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600'
                 : 'px-3 py-1 text-xs rounded transition-all text-gray-600';
-            
-            // Toggle class input visibility
-            document.getElementById('class-quick-mode').classList.toggle('hidden', !isQuick);
-            document.getElementById('t-class').classList.toggle('hidden', isQuick);
-            
-            // Toggle field visibility/disable
-            document.getElementById('hash-key-field').classList.toggle('hidden', isQuick);
-            document.getElementById('year-random-container').classList.toggle('hidden', isQuick);
-            document.getElementById('serial-field').classList.toggle('hidden', isQuick);
-            document.getElementById('validation-display').classList.toggle('hidden', isQuick);
-            document.getElementById('pay-field').classList.toggle('hidden', isQuick);
-            document.getElementById('discount-field').classList.toggle('hidden', isQuick);
-            document.getElementById('pickup-field').classList.toggle('hidden', isQuick);
-            document.getElementById('buy-time-field').classList.toggle('hidden', isQuick);
-            
-            // Toggle QR preview elements (糾錯、驗證、校驗)
-            // 糾錯只在快速選單隱藏，驗證和校驗在兩種模式都隱藏
-            document.getElementById('ecc-selector').classList.toggle('hidden', isQuick);
+
+            // Apply visibility based on config
+            uiConfig.forEach(item => {
+                const el = document.getElementById(item.id);
+                if (!el) return;
+
+                const shouldShow = isQuick ? item.quick : item.basic;
+
+                // If it's an expand-wrapper, use 'open' class
+                if (el.classList.contains('expand-wrapper')) {
+                    if (shouldShow) el.classList.add('open');
+                    else el.classList.remove('open');
+                } else {
+                    // Normal elements use hidden class
+                    if (shouldShow) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                }
+            });
+
+            // Toggle QR preview elements 
+            // Logic: In Quick mode, maybe hide ECC? 
+            // User didn't ask to configure ECC visibility, but we can infer: 
+            // If we want FULL config, we might add it. For now, keep existing ECC logic or simplify.
+            // Existing logic was: Hide ECC in Quick.
+            // ECC Logic: Check config
+            const eccConfig = uiConfig.find(c => c.id === 'ecc-selector');
+            const showEcc = eccConfig ? (isQuick ? eccConfig.quick : eccConfig.basic) : !isQuick; // Default fallback
+            document.getElementById('ecc-selector').classList.toggle('hidden', !showEcc);
+
             document.getElementById('check-display').classList.add('hidden');
             document.getElementById('md5-display').classList.add('hidden');
-            
-            // Sync class selection between modes
-            if (isQuick) {
-                const currentClass = document.getElementById('t-class').value;
-                const quickBtn = document.querySelector(`.quick-class-btn[data-class="${currentClass}"]`);
-                if (quickBtn) {
-                    selectQuickClass(currentClass);
+
+            updateTicketQR();
+        }
+
+        // --- SETTINGS MANAGEMENT ---
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem(CONFIG_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    // Check if new version structure (has config & classes) or old array
+                    if (Array.isArray(parsed)) {
+                        // Migration for V1 -> V2 logic (old array was just uiConfig)
+                        uiConfig = DEFAULT_CONFIG.map(def => {
+                            const existing = parsed.find(p => p.id === def.id);
+                            return existing ? existing : def;
+                        });
+                    } else if (parsed.uiConfig) {
+                        uiConfig = DEFAULT_CONFIG.map(def => {
+                            const existing = parsed.uiConfig.find(p => p.id === def.id);
+                            return existing ? existing : def;
+                        });
+                        if (parsed.visibleClasses) visibleClasses = parsed.visibleClasses;
+                    }
                 }
-            } else {
-                const selectedBtn = document.querySelector('.quick-class-btn.font-bold');
-                if (selectedBtn) {
-                    document.getElementById('t-class').value = selectedBtn.dataset.class;
-                }
+            } catch (e) { console.error('Load config failed', e); }
+            populateClassOptions();
+        }
+
+        function saveSettings() {
+            const data = {
+                uiConfig: uiConfig,
+                visibleClasses: visibleClasses
+            };
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(data));
+            // Real-time update if we are in ticket mode
+            if (currentMode === 'ticket') toggleTicketMode(ticketInputMode);
+            populateClassOptions(); // Re-render select
+        }
+
+        function resetSettings() {
+            if (!confirm('確定要還原預設值嗎？')) return;
+            uiConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+            visibleClasses = CLASS_OPTIONS.map(o => o.v);
+            saveSettings();
+            renderSettingsUI();
+        }
+
+        function toggleConfig(id, mode) {
+            const item = uiConfig.find(p => p.id === id);
+            if (item) {
+                item[mode] = !item[mode];
+                saveSettings();
             }
-            
-            updateTicketQR();
         }
 
-        function selectQuickClass(classCode) {
-            // Update visual selection
-            document.querySelectorAll('.quick-class-btn').forEach(btn => {
+        function toggleVisibleClass(code) {
+            if (visibleClasses.includes(code)) {
+                visibleClasses = visibleClasses.filter(c => c !== code);
+            } else {
+                visibleClasses.push(code);
+            }
+            saveSettings();
+            renderSettingsUI(); // re-render needed to show check state
+        }
+
+        function populateClassOptions() {
+            const select = document.getElementById('t-class');
+            const currentVal = select.value;
+
+            // Filter options based on visibleClasses, ALWAYS include current value to avoid breaking logic
+            // Also always include 'N' if it's default
+            const optionsToShow = CLASS_OPTIONS.filter(opt => visibleClasses.includes(opt.v) || opt.v === currentVal || opt.v === 'N');
+
+            // Unique them just in case
+            const uniqueOptions = [...new Map(optionsToShow.map(item => [item.v, item])).values()];
+
+            // Sort by code (A, B, C...)
+            uniqueOptions.sort((a, b) => a.v.localeCompare(b.v));
+
+            select.innerHTML = uniqueOptions.map(opt =>
+                `<option value="${opt.v}" ${opt.v === currentVal ? 'selected' : ''}>${opt.t}</option>`
+            ).join('');
+        }
+
+        function renderSettingsUI() {
+            const container = document.getElementById('config-items-container');
+
+            // Safety check: if config is lost/empty, restore default
+            if (!uiConfig || uiConfig.length === 0) {
+                uiConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                visibleClasses = CLASS_OPTIONS.map(o => o.v);
+                saveSettings();
+            }
+
+            let html = '';
+
+            // 1. General UI Field Toggles
+            html += uiConfig.map(item => `
+                            <div class="grid grid-cols-3 gap-2 items-center bg-white p-2 rounded shadow-sm border border-gray-100">
+                                <div class="text-[10px] font-bold text-gray-700 truncate" title="${item.label}">${item.label}</div>
+                                <div class="flex justify-center">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" 
+                                            ${item.quick ? 'checked' : ''} 
+                                            onchange="toggleConfig('${item.id}', 'quick')">
+                                        <div class="w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
+                                </div>
+                                <div class="flex justify-center">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" 
+                                            ${item.basic ? 'checked' : ''} 
+                                            onchange="toggleConfig('${item.id}', 'basic')">
+                                        <div class="w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-gray-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        `).join('');
+
+            // 2. Class Filter Section
+            html += `
+                            <div class="mt-6 pt-4 border-t border-gray-200">
+                                <h3 class="text-xs font-bold text-gray-800 mb-2">車種類別</h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    ${CLASS_OPTIONS.map(opt => `
+                                        <label class="flex items-center gap-2 bg-white p-2 rounded border border-gray-100 cursor-pointer hover:bg-gray-50">
+                                            <input type="checkbox" 
+                                                class="w-3 h-3 text-blue-600 rounded focus:ring-blue-500" 
+                                                ${visibleClasses.includes(opt.v) ? 'checked' : ''}
+                                                onchange="toggleVisibleClass('${opt.v}')">
+                                            <span class="text-[10px] font-mono text-gray-600">${opt.t}</span>
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+
+            container.innerHTML = html;
+        }
+
+        // --- CLASS SELECTION ---
+        function selectClass(classCode) {
+            // Update visual selection for buttons
+            document.querySelectorAll('.class-btn').forEach(btn => {
                 if (btn.dataset.class === classCode) {
-                    btn.className = 'quick-class-btn p-2 border-2 border-blue-500 bg-blue-50 rounded text-[10px] font-mono font-bold text-blue-700';
+                    btn.className = 'class-btn p-2 border-2 border-blue-500 bg-blue-50 rounded text-[10px] font-mono font-bold text-blue-700';
                 } else {
-                    btn.className = 'quick-class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors';
+                    btn.className = 'class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors';
                 }
             });
-            
-            // Update select value (for data consistency)
-            document.getElementById('t-class').value = classCode;
+
+            // Update select value and helper text
+            const select = document.getElementById('t-class');
+            select.value = classCode;
+
             updateTicketQR();
         }
 
-        // --- ECC LEVEL SELECTION ---
-        function selectEccLevel(level) {
-            currentEccLevel = level;
-            document.querySelectorAll('.ecc-btn').forEach(btn => {
-                if (btn.dataset.ecc === level) {
-                    btn.className = 'ecc-btn flex-1 p-1.5 border-2 border-blue-500 bg-blue-50 rounded text-[9px] font-mono font-bold text-blue-700';
-                } else {
-                    btn.className = 'ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors';
-                }
-            });
-            refreshQR();
+        function syncClassFromSelect() {
+            const classCode = document.getElementById('t-class').value;
+            selectClass(classCode); // This will update button highlight if match found
         }
 
         // --- SERIAL GENERATOR ---
@@ -610,19 +1023,19 @@
         // --- CUSTOM HASH ALGORITHM (8 Steps) ---
         function calculateValidation(classChar, year, serial, random, hashKey) {
             // Step 1: Remove 1st char English -> calcSerial = Year(1) + Serial(9) = 10 digits
-            let calcSerialBase = year + serial; 
-            
+            let calcSerialBase = year + serial;
+
             // Step 2: Add Random -> R1 + calcSerial + R2 = 12 digits
             let r1 = random.charAt(0);
             let r2 = random.charAt(1);
-            let mixedSerial = r1 + calcSerialBase + r2; 
-            
+            let mixedSerial = r1 + calcSerialBase + r2;
+
             // Step 3: Insert Hash Key
             // Hash Key indices 0-7. Mixed Serial indices 0-11.
             let h = hashKey.split('');
             let m = mixedSerial.split('');
             let combined = [];
-            
+
             // Pattern: R o H o H o H o H o o H o H o H o H o R
             combined.push(m[0]); // R1
             combined.push(m[1]); // o
@@ -644,18 +1057,18 @@
             combined.push(h[7]); // H
             combined.push(m[10]); // o
             combined.push(m[11]); // R2
-            
+
             let numStr = combined.join(''); // Total 20 digits
-            
+
             // Helper: Pairwise addition (Disjoint)
             function reduceDisjoint(str) {
                 let res = "";
                 for (let i = 0; i < str.length; i += 2) {
                     if (i + 1 < str.length) {
-                        let sum = parseInt(str[i]) + parseInt(str[i+1]);
+                        let sum = parseInt(str[i]) + parseInt(str[i + 1]);
                         res += (sum % 10).toString();
                     } else {
-                        res += str[i]; 
+                        res += str[i];
                     }
                 }
                 return res;
@@ -665,7 +1078,7 @@
             function reduceSliding(str) {
                 let res = "";
                 for (let i = 0; i < str.length - 1; i++) {
-                    let sum = parseInt(str[i]) + parseInt(str[i+1]);
+                    let sum = parseInt(str[i]) + parseInt(str[i + 1]);
                     res += (sum % 10).toString();
                 }
                 return res;
@@ -673,16 +1086,16 @@
 
             // Step 5: 1st Calc (20 -> 10)
             let s1 = reduceDisjoint(numStr);
-            
+
             // Step 6: 2nd Calc (10 -> 5)
             let s2 = reduceDisjoint(s1);
-            
+
             // Step 7: 3rd Calc (5 -> 4) (Sliding)
             let s3 = reduceSliding(s2);
-            
+
             // Step 8: 4th Calc (4 -> 2) (Disjoint)
             let s4 = reduceDisjoint(s3);
-            
+
             return { code: s4, log: `Base:${calcSerialBase} -> Mix:${mixedSerial} -> Full:${numStr} -> ${s1} -> ${s2} -> ${s3} -> Result:${s4}` };
         }
 
@@ -713,7 +1126,7 @@
         function getBase62Time(val, type) {
             if (!val) return type === 'full' ? '00000' : '000';
             const d = new Date(val);
-            const Y = d.getFullYear() % 100; 
+            const Y = d.getFullYear() % 100;
             const M = d.getMonth() + 1;
             const D = d.getDate();
             const H = d.getHours();
@@ -732,9 +1145,9 @@
             // 1. Validation (15-char Ticket Logic)
             const vRes = calculateValidation(d.classCode, d.year, d.serial, d.random, d.hashKey);
             const fullTicketNo = `${d.classCode}${d.year}${d.serial}${vRes.code}${d.random}`;
-            
+
             // 2. Format Times (Base62)
-            const nonReserved = ['A','C','S','J','T','P','B','L','F'].includes(d.carMain);
+            const nonReserved = ['A', 'C', 'S', 'J', 'T', 'P', 'B', 'L', 'F'].includes(d.carMain);
             let tDep = getBase62Time(d.timeDepart, 'full');
             let tArr = getBase62Time(d.timeArrive, 'full');
             if (nonReserved) {
@@ -742,7 +1155,7 @@
                 tArr = tArr.substring(0, 3) + 'ZZ';
             }
             const tBuy = getBase62Time(d.timeBuy, 'buy');
-            const price = pad(toBase62(parseInt(d.price)||0), 4, '0');
+            const price = pad(toBase62(parseInt(d.price) || 0), 4, '0');
 
             // 3. Assemble 60 chars
             const sStart = pad(extractStationCode(d.start), 4, 'Z');
@@ -756,7 +1169,7 @@
             const hashKey = pad(d.hashKey, 8, 'A');
             const stringToHash = raw56 + hashKey;
             const md5Hash = CryptoJS.MD5(stringToHash).toString().toUpperCase();
-            const checksum = md5Hash.substring(md5Hash.length - 4); 
+            const checksum = md5Hash.substring(md5Hash.length - 4);
 
             const finalString = raw56 + checksum;
 
@@ -772,19 +1185,15 @@
 
         // --- ACTIONS ---
         function updateTicketQR() {
-            // Get class code from either mode
+            // Get class code from select (which is synced with buttons)
             let classCode = document.getElementById('t-class').value;
-            if (ticketInputMode === 'quick') {
-                const selectedBtn = document.querySelector('.quick-class-btn.font-bold');
-                if (selectedBtn) classCode = selectedBtn.dataset.class;
-            }
-            
+
             const data = {
-                hashKey: document.getElementById('t-hash-key').value.padEnd(8,'0'),
+                hashKey: document.getElementById('t-hash-key').value.padEnd(8, '0'),
                 classCode: classCode,
                 year: document.getElementById('t-year').value,
-                random: document.getElementById('t-random').value.padEnd(2,'0'),
-                serial: document.getElementById('t-serial').value.padEnd(9,'0'),
+                random: document.getElementById('t-random').value.padEnd(2, '0'),
+                serial: document.getElementById('t-serial').value.padEnd(9, '0'),
                 start: document.getElementById('t-start-diff').value,
                 startMain: document.getElementById('t-start-main').value,
                 endMain: document.getElementById('t-end-main').value,
@@ -804,17 +1213,17 @@
             };
 
             const res = generateTicketData(data);
-            
+
             document.getElementById('disp-validation-code').innerText = res.validationCode;
             document.getElementById('calc-log-short').innerText = res.log.split('->').pop();
-            
+
             document.getElementById('disp-time-depart').innerText = res.tDep;
             document.getElementById('disp-time-arrive').innerText = res.tArr;
             document.getElementById('disp-price').innerText = res.price;
             document.getElementById('disp-time-buy').innerText = res.tBuy;
             document.getElementById('disp-checksum').innerText = res.checksum;
             document.getElementById('disp-checksum-mobile').innerText = res.checksum;
-            
+
             document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
 
             qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: currentEccLevel });
@@ -832,7 +1241,7 @@
 
         function switchTab(mode) {
             currentMode = mode;
-            ['general', 'ticket', 'history'].forEach(t => {
+            ['general', 'ticket', 'history', 'settings'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 const panel = document.getElementById(`panel-${t}`);
                 if (t === mode) {
@@ -841,19 +1250,20 @@
                     btn.classList.add('tab-inactive'); btn.classList.remove('tab-active'); panel.classList.add('hidden');
                 }
             });
-            
+
             const isTicket = (mode === 'ticket');
             document.getElementById('btn-save-ticket').classList.toggle('hidden', !isTicket);
             document.getElementById('preview-label').classList.add('hidden');
             const md5Display = document.getElementById('md5-display');
             if (md5Display) md5Display.classList.toggle('hidden', mode === 'general');
-            
-            if(mode === 'ticket') {
+
+            if (mode === 'ticket') {
                 // generateNewSerial(); // Optional: Auto regen on tab switch
                 updateTicketQR();
             }
-            if(mode === 'general') updateGeneralQR();
-            if(mode === 'history') renderHistory();
+            if (mode === 'general') updateGeneralQR();
+            if (mode === 'history') renderHistory();
+            if (mode === 'settings') renderSettingsUI();
         }
 
         function updateGeneralQR() {
@@ -863,7 +1273,7 @@
             qr.set({ value: input, foreground: fg, background: bg, level: currentEccLevel });
             document.getElementById('qr-raw-content').innerText = input;
         }
-        
+
         function refreshQR() {
             if (currentMode === 'general') updateGeneralQR();
             else if (currentMode === 'ticket') updateTicketQR();
@@ -872,7 +1282,7 @@
 
         // --- HISTORY ---
         function getHistory() {
-            try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e){ return []; }
+            try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch (e) { return []; }
         }
         function saveTicketToHistory() {
             const data = {
@@ -901,9 +1311,9 @@
             };
             const h = getHistory();
             h.unshift(data);
-            if(h.length > 20) h.length = 20;
+            if (h.length > 20) h.length = 20;
             localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
-            
+
             const overlay = document.getElementById('save-success');
             overlay.classList.remove('opacity-0');
             setTimeout(() => overlay.classList.add('opacity-0'), 1500);
@@ -919,15 +1329,15 @@
             const scrollContainer = list.closest('.overflow-y-auto');
             const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
 
-            if(h.length === 0) { list.innerHTML = '<div class="text-center py-10 text-gray-400">目前沒有歷史紀錄</div>'; return; }
-            
+            if (h.length === 0) { list.innerHTML = '<div class="text-center py-10 text-gray-400">目前沒有歷史紀錄</div>'; return; }
+
             list.innerHTML = h.map((item, i) => {
                 const activeClass = (i === currentHistoryPreviewIdx) ? 'active-preview' : 'border-gray-200';
                 const carName = CAR_NAMES[item.carMain] || item.carMain;
                 // Pre-calc ticket no for display
                 const vRes = calculateValidation(item.classCode, item.year, item.serial, item.random, item.hashKey);
                 const tNo = `${item.classCode}${item.year}${item.serial}${vRes.code}${item.random}`;
-                
+
                 return `
                 <div class="history-card bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all ${activeClass}">
                     <div class="flex justify-between mb-2">
@@ -935,7 +1345,7 @@
                             <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">${carName}</span>
                             <span class="text-sm font-mono text-gray-500 ml-1">$${item.price}</span>
                         </div>
-                        <span class="text-xs text-gray-400">#${i+1}</span>
+                        <span class="text-xs text-gray-400">#${i + 1}</span>
                     </div>
                     <div class="text-sm text-gray-700 mb-2 font-mono text-xs font-bold text-gray-600">${tNo}</div>
                     <div class="flex gap-2">
@@ -982,7 +1392,7 @@
             const res = generateTicketData(item);
             document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
             document.getElementById('preview-label').classList.remove('hidden');
-            document.getElementById('preview-label').innerText = `預覽紀錄 #${i+1}`;
+            document.getElementById('preview-label').innerText = `預覽紀錄 #${i + 1}`;
 
             qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: currentEccLevel });
         }
@@ -990,7 +1400,7 @@
         function loadHistory(i) {
             const item = getHistory()[i];
             populateTicketForm(item);
-            
+
             currentHistoryPreviewIdx = -1;
             switchTab('ticket');
         }
@@ -998,10 +1408,10 @@
             const h = getHistory();
             h.splice(i, 1);
             localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
-            if(currentHistoryPreviewIdx === i) {
+            if (currentHistoryPreviewIdx === i) {
                 currentHistoryPreviewIdx = -1;
                 document.getElementById('preview-label').classList.add('hidden');
-                qr.set({value:''});
+                qr.set({ value: '' });
             } else if (currentHistoryPreviewIdx > i) currentHistoryPreviewIdx--;
             renderHistory();
             updateHistoryCount();
@@ -1014,4 +1424,5 @@
         }
     </script>
 </body>
+
 </html>
