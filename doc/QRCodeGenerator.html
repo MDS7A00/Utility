@@ -295,15 +295,113 @@
 
                 <!-- === TAB: GENERAL === -->
                 <div id="panel-general" class="p-5 md:p-8 hidden">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">內容輸入</label>
+                    <div class="space-y-6">
+                        <!-- Mode Selector Toolbar -->
+                        <div class="flex gap-2 overflow-x-auto pb-2 border-b border-gray-100 no-scrollbar">
+                            <button onclick="setGeneralMode('text')" id="btn-mode-text"
+                                class="mode-btn-gen p-3 rounded-xl border border-blue-500 bg-blue-50 text-blue-600 flex flex-col items-center min-w-[60px] transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 12h16M4 18h7" />
+                                </svg>
+                                <span class="text-[10px] font-bold">文字</span>
+                            </button>
+                            <button onclick="setGeneralMode('wifi')" id="btn-mode-wifi"
+                                class="mode-btn-gen p-3 rounded-xl border border-gray-200 bg-white text-gray-500 flex flex-col items-center min-w-[60px] hover:bg-gray-50 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                                </svg>
+                                <span class="text-[10px] font-bold">WiFi</span>
+                            </button>
+                            <button onclick="setGeneralMode('line')" id="btn-mode-line"
+                                class="mode-btn-gen p-3 rounded-xl border border-gray-200 bg-white text-gray-500 flex flex-col items-center min-w-[60px] hover:bg-gray-50 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span class="text-[10px] font-bold">Line</span>
+                            </button>
+                            <button onclick="setGeneralMode('url')" id="btn-mode-url"
+                                class="mode-btn-gen p-3 rounded-xl border border-gray-200 bg-white text-gray-500 flex flex-col items-center min-w-[60px] hover:bg-gray-50 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                </svg>
+                                <span class="text-[10px] font-bold">網址</span>
+                            </button>
+                            <button onclick="setGeneralMode('sms')" id="btn-mode-sms"
+                                class="mode-btn-gen p-3 rounded-xl border border-gray-200 bg-white text-gray-500 flex flex-col items-center min-w-[60px] hover:bg-gray-50 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <span class="text-[10px] font-bold">簡訊</span>
+                            </button>
+                        </div>
+
+                        <!-- INPUT FORMS -->
+                        <div id="gen-form-text" class="block">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">文字內容</label>
                             <textarea id="qr-input" rows="5"
                                 class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none bg-gray-50 font-mono text-base"
-                                placeholder="輸入文字..."
+                                placeholder="請輸入文字..."
                                 oninput="updateGeneralQR()">https://mds7a00.github.io/Utility/doc/QRCodeGenerator.html</textarea>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
+
+                        <div id="gen-form-wifi" class="hidden space-y-4">
+                            <div class="grid grid-cols-1 gap-4">
+                                <input id="wifi-ssid" type="text" placeholder="Wi-Fi 名稱 (SSID)"
+                                    class="w-full p-3 border rounded-xl bg-gray-50" oninput="updateGeneralQR()">
+                                <input id="wifi-pass" type="text" placeholder="密碼"
+                                    class="w-full p-3 border rounded-xl bg-gray-50" oninput="updateGeneralQR()">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <select id="wifi-type" class="w-full p-3 border rounded-xl bg-gray-50"
+                                        onchange="updateGeneralQR()">
+                                        <option value="WPA">WPA/WPA2</option>
+                                        <option value="WEP">WEP</option>
+                                        <option value="nopass">無密碼</option>
+                                    </select>
+                                    <label
+                                        class="flex items-center gap-2 p-3 border rounded-xl bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" id="wifi-hidden" class="w-4 h-4 text-blue-600 rounded"
+                                            onchange="updateGeneralQR()">
+                                        <span class="text-sm text-gray-600">隱藏網路</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-400 text-center">掃描後即可加入 Wi-Fi</div>
+                        </div>
+
+                        <div id="gen-form-line" class="hidden space-y-4">
+                            <textarea id="line-text" rows="4" placeholder="輸入要發送的訊息..."
+                                class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 font-mono text-base"
+                                oninput="updateGeneralQR()"></textarea>
+                            <div class="text-xs text-gray-400 text-center">掃描後會開啟 Line 並帶入訊息</div>
+                        </div>
+
+                        <div id="gen-form-url" class="hidden space-y-4">
+                            <input id="url-input" type="url" placeholder="https://example.com"
+                                class="w-full p-3 border rounded-xl bg-gray-50 font-mono text-blue-600"
+                                oninput="updateGeneralQR()">
+                            <div class="text-xs text-gray-400 text-center">請輸入完整網址 (包含 http:// 或 https://)</div>
+                        </div>
+
+                        <div id="gen-form-sms" class="hidden space-y-4">
+                            <input id="sms-phone" type="tel" placeholder="電話號碼"
+                                class="w-full p-3 border rounded-xl bg-gray-50" oninput="updateGeneralQR()">
+                            <textarea id="sms-body" rows="3" placeholder="簡訊內容..."
+                                class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 font-mono text-base"
+                                oninput="updateGeneralQR()"></textarea>
+                        </div>
+
+                        <!-- Common Color Settings -->
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                             <div class="p-3 border rounded-xl bg-gray-50">
                                 <label class="block text-xs text-gray-500 mb-1">前景色</label>
                                 <input type="color" id="gen-fg" value="#000000"
@@ -1253,14 +1351,76 @@
             if (mode === 'settings') renderSettingsUI();
         }
 
-        function updateGeneralQR() {
-            const input = document.getElementById('qr-input').value || ' ';
-            const fg = document.getElementById('gen-fg').value;
-            const bg = document.getElementById('gen-bg').value;
-            qr.set({ value: input, foreground: fg, background: bg, level: currentEccLevel });
-            document.getElementById('qr-raw-content').innerText = input;
+        // --- GENERAL MODE SHORTCUTS ---
+        let generalInputMode = 'text';
+
+        function setGeneralMode(mode) {
+            generalInputMode = mode;
+
+            // Update Active Icon
+            const modes = ['text', 'wifi', 'line', 'url', 'sms'];
+            modes.forEach(m => {
+                const btn = document.getElementById(`btn-mode-${m}`);
+                if (m === mode) {
+                    btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-600');
+                    btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-500');
+                } else {
+                    btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-600');
+                    btn.classList.add('border-gray-200', 'bg-white', 'text-gray-500');
+                }
+
+                // Toggle Form Visibility
+                const form = document.getElementById(`gen-form-${m}`);
+                if (m === mode) form.classList.remove('hidden');
+                else form.classList.add('hidden');
+            });
+
+            updateGeneralQR();
         }
 
+        function updateGeneralQR() {
+            let value = '';
+
+            if (generalInputMode === 'text') {
+                value = document.getElementById('qr-input').value;
+            } else if (generalInputMode === 'wifi') {
+                const ssid = document.getElementById('wifi-ssid').value;
+                const pass = document.getElementById('wifi-pass').value;
+                const type = document.getElementById('wifi-type').value;
+                const hidden = document.getElementById('wifi-hidden').checked;
+                // WIFI:T:WPA;S:mynetwork;P:mypass;;
+                // If nopass, P is empty? Or omitted? usually T:nopass? No, T:nopass is standard? 
+                // Format: WIFI:S:SSID;T:Type;P:Password;H:true;;
+                value = `WIFI:S:${ssid};T:${type === 'nopass' ? '' : type};P:${pass};H:${hidden};;`;
+            } else if (generalInputMode === 'line') {
+                const text = document.getElementById('line-text').value;
+                if (text) {
+                    // Using line scheme for text msg? line://msg/text/
+                    value = `http://line.me/R/msg/text/?${encodeURIComponent(text)}`;
+                }
+            } else if (generalInputMode === 'url') {
+                value = document.getElementById('url-input').value;
+                // Add https if missing? Optional.
+            } else if (generalInputMode === 'sms') {
+                const phone = document.getElementById('sms-phone').value;
+                const body = document.getElementById('sms-body').value;
+                value = `smsto:${phone}:${body}`;
+            }
+
+            const fg = document.getElementById('gen-fg').value;
+            const bg = document.getElementById('gen-bg').value;
+
+            // Update QR
+            qr.set({
+                value: value,
+                foreground: fg,
+                background: bg,
+                level: 'L' // General use L
+            });
+
+            // Note: General mode doesn't show raw content in preview-label usually?
+            // Existing logic didn't show it.
+        }
         function refreshQR() {
             if (currentMode === 'general') updateGeneralQR();
             else if (currentMode === 'ticket') updateTicketQR();
