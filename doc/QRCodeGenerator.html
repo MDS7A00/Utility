@@ -24,9 +24,9 @@
 
         .tab-btn {
             flex: 1;
-            padding: 0.5rem 1rem;
+            padding: 0.375rem 0.75rem;
             border-radius: 0.375rem;
-            font-size: 0.875rem;
+            font-size: 0.7rem;
             transition: all 0.2s;
             text-align: center;
             white-space: nowrap;
@@ -94,12 +94,12 @@
     <div class="bg-white w-full max-w-6xl md:rounded-3xl shadow-xl flex flex-col relative h-screen md:h-auto md:min-h-[800px] overflow-hidden">
         
         <!-- Header & Tabs -->
-        <div class="px-4 py-4 md:px-8 md:pt-6 border-b border-gray-100 flex flex-col md:flex-row justify-between md:items-end bg-white z-20 shrink-0">
-            <div class="mb-3 md:mb-0">
-                <h1 class="text-xl md:text-2xl font-bold text-gray-800">QR Code 產生中心</h1>
-                <p class="text-xs md:text-sm text-gray-500">15碼票號演算 / 60碼標準格式</p>
+        <div class="px-4 py-2 md:px-8 md:py-3 border-b border-gray-100 flex flex-col md:flex-row justify-between md:items-end bg-white z-20 shrink-0">
+            <div class="mb-2 md:mb-0 flex items-baseline gap-2">
+                <h1 class="text-lg md:text-xl font-bold text-gray-800">QR Code 產生中心</h1>
+                <p class="text-[9px] md:text-[10px] text-gray-500">15碼票號演算 / 60碼標準格式</p>
             </div>
-            <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg self-start md:self-auto w-full md:w-auto overflow-x-auto">
+            <div class="flex space-x-0.5 bg-gray-100 p-0.5 rounded-lg self-start md:self-auto w-full md:w-auto overflow-x-auto">
                 <button onclick="switchTab('general')" id="tab-general" class="tab-btn tab-inactive">
                     一般模式
                 </button>
@@ -108,7 +108,7 @@
                 </button>
                 <button onclick="switchTab('history')" id="tab-history" class="tab-btn tab-inactive flex items-center justify-center gap-1">
                     <span>歷史紀錄</span>
-                    <span id="history-count" class="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded-full">0</span>
+                    <span id="history-count" class="bg-gray-200 text-gray-600 text-[9px] px-1.5 py-0.5 rounded-full">0</span>
                 </button>
             </div>
         </div>
@@ -119,61 +119,67 @@
             <div class="md:relative md:w-1/3 md:bg-gray-50 md:border-r border-gray-200 md:order-1 md:overflow-y-auto">
                 <div class="p-3 md:p-4 pb-4">
                     
-                    <!-- 兩欄佈局: QR Code + 操作區 -->
-                    <div class="flex flex-col md:flex-row gap-3 items-start">
-                        
-                        <!-- 左欄: QR Code + ECC -->
-                        <div class="flex flex-col items-center flex-shrink-0 cursor-pointer" onclick="toggleZoom()" title="點擊放大">
-                            <div class="bg-white p-2 md:p-3 rounded-lg md:rounded-xl shadow-sm border border-gray-100 relative group transition-transform hover:scale-[1.02]">
-                                <canvas id="qr-code" class="w-40 h-40 md:w-48 md:h-48 rounded-lg"></canvas>
-                                <div class="absolute top-2 right-2 md:top-4 md:right-4 bg-gray-100/80 p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                    </svg>
-                                </div>
-                                <div id="save-success" class="absolute inset-0 bg-green-500/90 rounded-lg md:rounded-xl flex flex-col items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
-                                    <svg class="w-8 h-8 md:w-16 md:h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    <span class="text-xs md:text-lg font-bold">已儲存!</span>
+                    <!-- 單行佈局: QR Code (3/4) + 按鈕 (1/4) -->
+                    <div class="flex flex-col gap-3">
+                        <!-- 第一行: QR Code + 儲存下載 -->
+                        <div class="flex flex-row gap-2 items-center">
+                            <!-- QR Code 區域 (3/4) -->
+                            <div class="flex-[3] flex justify-center cursor-pointer" onclick="toggleZoom()" title="點擊放大">
+                                <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100 relative group transition-transform hover:scale-[1.02]">
+                                    <canvas id="qr-code" class="w-32 h-32 md:w-40 md:h-40 rounded-lg"></canvas>
+                                    <div class="absolute top-2 right-2 bg-gray-100/80 p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                        </svg>
+                                    </div>
+                                    <div id="save-success" class="absolute inset-0 bg-green-500/90 rounded-lg flex flex-col items-center justify-center text-white opacity-0 transition-opacity pointer-events-none">
+                                        <svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span class="text-sm font-bold">已儲存!</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="mt-2 w-full max-w-[160px]" onclick="event.stopPropagation()">
-                                <label class="text-[10px] text-gray-400 block text-center mb-1">糾錯等級</label>
-                                <select id="qr-ecc-level" onchange="refreshQR()" class="w-full text-xs p-1 border rounded text-center bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                            <!-- 儲存下載按鈕區 (1/4) -->
+                            <div class="flex-1 flex flex-col gap-2">
+                                <button id="btn-save-ticket" onclick="saveTicketToHistory()" class="w-full bg-white border-2 border-gray-300 text-gray-700 py-2 px-2 rounded-lg font-bold shadow-sm hover:bg-gray-50 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                    </svg>
+                                    <span class="text-xs">儲存</span>
+                                </button>
+                                
+                                <button onclick="downloadQR()" class="w-full bg-gray-900 text-white py-2 px-2 rounded-lg font-bold shadow-md hover:bg-gray-800 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    <span class="text-xs">下載</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 第二行: 其他信息 -->
+                        <div class="flex flex-col gap-2">
+                            <div id="preview-label" class="text-[10px] md:text-xs font-bold text-blue-500 hidden">正在預覽歷史紀錄</div>
+                            <div id="qr-raw-content" class="hidden md:block bg-gray-100 p-2 rounded text-[9px] font-mono break-all text-gray-600 border border-gray-200"></div>
+                            
+                            <div id="ecc-selector" class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm" onclick="event.stopPropagation()">
+                                <label class="text-[8px] text-gray-400 block mb-1">糾錯等級</label>
+                                <select id="qr-ecc-level" onchange="refreshQR()" class="w-full text-[10px] p-1 border rounded text-center bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
                                     <option value="L">L (7%)</option>
                                     <option value="M" selected>M (15%)</option>
                                     <option value="Q">Q (25%)</option>
                                     <option value="H">H (30%)</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <!-- 右欄: 操作區 (儲存、下載、Check、MD5) -->
-                        <div class="flex-1 flex flex-col gap-2 justify-center w-full md:w-auto">
-                            <div id="preview-label" class="text-xs font-bold text-blue-500 mb-0.5 hidden">正在預覽歷史紀錄</div>
-                            <div id="qr-raw-content" class="hidden md:block bg-gray-100 p-2 rounded text-[9px] font-mono break-all text-gray-600 border border-gray-200"></div>
                             
-                            <div class="text-sm text-gray-500 font-mono bg-white p-2.5 rounded-lg border border-gray-200" id="mobile-checksum-display">
-                                Check: <span class="font-bold text-red-500" id="disp-checksum-mobile">----</span>
+                            <div id="check-display" class="text-xs text-gray-600 font-mono bg-white p-2 rounded-lg border border-gray-300 shadow-sm">
+                                <div class="text-[8px] text-gray-400 mb-0.5">驗證</div>
+                                <div class="text-[10px]">Check: <span class="font-bold text-red-500" id="disp-checksum-mobile">----</span></div>
                             </div>
-
-                            <button id="btn-save-ticket" onclick="saveTicketToHistory()" class="w-full bg-white border-2 border-gray-300 text-gray-700 py-2.5 px-4 rounded-lg font-bold shadow-sm active:bg-gray-50 active:scale-95 transition-all flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                                </svg>
-                                <span class="text-sm">儲存</span>
-                            </button>
                             
-                            <button onclick="downloadQR()" class="w-full bg-gray-900 text-white py-2.5 px-4 rounded-lg font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                <span>下載</span>
-                            </button>
-                            
-                            <div id="ticket-checksum-display" class="bg-white p-2.5 rounded-lg border border-gray-200">
-                                <span class="text-xs text-gray-400">MD5: </span>
-                                <span class="text-sm font-bold text-red-500 font-mono" id="disp-checksum"></span>
+                            <div id="md5-display" class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm">
+                                <div class="text-[8px] text-gray-400 mb-0.5">校驗</div>
+                                <div class="text-[10px]"><span class="text-[9px] text-gray-500">MD5: </span><span class="font-bold text-red-500 font-mono" id="disp-checksum"></span></div>
                             </div>
                         </div>
                     </div>
@@ -516,6 +522,12 @@
             document.getElementById('pickup-field').classList.toggle('hidden', isQuick);
             document.getElementById('buy-time-field').classList.toggle('hidden', isQuick);
             
+            // Toggle QR preview elements (糾錯、驗證、校驗)
+            // 糾錯只在快速選單隱藏，驗證和校驗在兩種模式都隱藏
+            document.getElementById('ecc-selector').classList.toggle('hidden', isQuick);
+            document.getElementById('check-display').classList.add('hidden');
+            document.getElementById('md5-display').classList.add('hidden');
+            
             // Sync class selection between modes
             if (isQuick) {
                 const currentClass = document.getElementById('t-class').value;
@@ -812,7 +824,8 @@
             const isTicket = (mode === 'ticket');
             document.getElementById('btn-save-ticket').classList.toggle('hidden', !isTicket);
             document.getElementById('preview-label').classList.add('hidden');
-            document.getElementById('ticket-checksum-display').classList.toggle('hidden', mode === 'general');
+            const md5Display = document.getElementById('md5-display');
+            if (md5Display) md5Display.classList.toggle('hidden', mode === 'general');
             
             if(mode === 'ticket') {
                 // generateNewSerial(); // Optional: Auto regen on tab switch
