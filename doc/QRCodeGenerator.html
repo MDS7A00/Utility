@@ -162,14 +162,22 @@
                             <div id="preview-label" class="text-[10px] md:text-xs font-bold text-blue-500 hidden">正在預覽歷史紀錄</div>
                             <div id="qr-raw-content" class="hidden md:block bg-gray-100 p-2 rounded text-[9px] font-mono break-all text-gray-600 border border-gray-200"></div>
                             
-                            <div id="ecc-selector" class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm" onclick="event.stopPropagation()">
-                                <label class="text-[8px] text-gray-400 block mb-1">糾錯等級</label>
-                                <select id="qr-ecc-level" onchange="refreshQR()" class="w-full text-[10px] p-1 border rounded text-center bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                                    <option value="L">L (7%)</option>
-                                    <option value="M" selected>M (15%)</option>
-                                    <option value="Q">Q (25%)</option>
-                                    <option value="H">H (30%)</option>
-                                </select>
+                            <div id="ecc-selector" class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm flex items-center gap-2" onclick="event.stopPropagation()">
+                                <label class="text-[8px] text-gray-400 whitespace-nowrap">糾錯等級</label>
+                                <div class="flex gap-1 flex-1">
+                                    <button onclick="selectEccLevel('L')" data-ecc="L" class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
+                                        L<br><span class="text-[7px]">7%</span>
+                                    </button>
+                                    <button onclick="selectEccLevel('M')" data-ecc="M" class="ecc-btn flex-1 p-1.5 border-2 border-blue-500 bg-blue-50 rounded text-[9px] font-mono font-bold text-blue-700">
+                                        M<br><span class="text-[7px]">15%</span>
+                                    </button>
+                                    <button onclick="selectEccLevel('Q')" data-ecc="Q" class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
+                                        Q<br><span class="text-[7px]">25%</span>
+                                    </button>
+                                    <button onclick="selectEccLevel('H')" data-ecc="H" class="ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors">
+                                        H<br><span class="text-[7px]">30%</span>
+                                    </button>
+                                </div>
                             </div>
                             
                             <div id="check-display" class="text-xs text-gray-600 font-mono bg-white p-2 rounded-lg border border-gray-300 shadow-sm">
@@ -468,6 +476,7 @@
         let currentHistoryPreviewIdx = -1;
         let serialCounter = 0;
         let ticketInputMode = 'quick'; // 'quick' or 'basic'
+        let currentEccLevel = 'M'; // 當前糾錯等級
 
         window.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
@@ -558,6 +567,19 @@
             // Update select value (for data consistency)
             document.getElementById('t-class').value = classCode;
             updateTicketQR();
+        }
+
+        // --- ECC LEVEL SELECTION ---
+        function selectEccLevel(level) {
+            currentEccLevel = level;
+            document.querySelectorAll('.ecc-btn').forEach(btn => {
+                if (btn.dataset.ecc === level) {
+                    btn.className = 'ecc-btn flex-1 p-1.5 border-2 border-blue-500 bg-blue-50 rounded text-[9px] font-mono font-bold text-blue-700';
+                } else {
+                    btn.className = 'ecc-btn flex-1 p-1.5 border rounded text-[9px] font-mono hover:bg-blue-50 transition-colors';
+                }
+            });
+            refreshQR();
         }
 
         // --- SERIAL GENERATOR ---
@@ -795,8 +817,7 @@
             
             document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
 
-            const level = document.getElementById('qr-ecc-level').value;
-            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: level });
+            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: currentEccLevel });
         }
 
         // --- SHARED UI LOGIC ---
@@ -839,8 +860,7 @@
             const input = document.getElementById('qr-input').value || ' ';
             const fg = document.getElementById('gen-fg').value;
             const bg = document.getElementById('gen-bg').value;
-            const level = document.getElementById('qr-ecc-level').value;
-            qr.set({ value: input, foreground: fg, background: bg, level: level });
+            qr.set({ value: input, foreground: fg, background: bg, level: currentEccLevel });
             document.getElementById('qr-raw-content').innerText = input;
         }
         
@@ -963,12 +983,8 @@
             document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
             document.getElementById('preview-label').classList.remove('hidden');
             document.getElementById('preview-label').innerText = `預覽紀錄 #${i+1}`;
-            
-            document.getElementById('disp-checksum').innerText = res.checksum;
-            document.getElementById('disp-checksum-mobile').innerText = res.checksum;
 
-            const level = document.getElementById('qr-ecc-level').value;
-            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: level });
+            qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: currentEccLevel });
         }
 
         function loadHistory(i) {
