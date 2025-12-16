@@ -341,16 +341,7 @@
                                     class="bg-gray-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2">1</span>
                                 票號組成 (15碼)
                             </div>
-                            <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
-                                <button onclick="toggleTicketMode('quick')" id="mode-quick"
-                                    class="px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600">
-                                    快速選單
-                                </button>
-                                <button onclick="toggleTicketMode('basic')" id="mode-basic"
-                                    class="px-3 py-1 text-xs rounded transition-all text-gray-600">
-                                    基本設定
-                                </button>
-                            </div>
+
                         </h3>
                         <div class="grid grid-cols-4 gap-2">
                             <div class="col-span-4">
@@ -725,7 +716,7 @@
 
         const DEFAULT_CONFIG = [
             { id: 'hash-key-wrapper', label: '閘門雜湊值', quick: false, basic: true },
-            { id: 'advanced-class-select', label: '更多類別 (下拉選單)', quick: false, basic: true },
+            { id: 'advanced-class-select', label: '更多類別 (下拉選單)', quick: false, basic: false },
             { id: 'ecc-selector', label: '糾錯等級 (L/M/Q/H)', quick: false, basic: false }, // User requested checkable
             { id: 'basic-settings-group', label: '年份/隨機/流水號', quick: false, basic: true },
             { id: 'wrapper-stations', label: '車站區間', quick: true, basic: true },
@@ -772,24 +763,17 @@
         }
 
         // --- TICKET INPUT MODE TOGGLE (Smooth Transition) ---
+        // --- TICKET INPUT MODE (Single "Basic" Mode) ---
         function toggleTicketMode(mode) {
-            ticketInputMode = mode;
-            const isQuick = (mode === 'quick');
+            // mode arg is ignored, always 'basic' logic
+            ticketInputMode = 'basic';
 
-            // Toggle button styles
-            document.getElementById('mode-quick').className = isQuick
-                ? 'px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600'
-                : 'px-3 py-1 text-xs rounded transition-all text-gray-600';
-            document.getElementById('mode-basic').className = !isQuick
-                ? 'px-3 py-1 text-xs rounded transition-all bg-white shadow-sm font-bold text-blue-600'
-                : 'px-3 py-1 text-xs rounded transition-all text-gray-600';
-
-            // Apply visibility based on config
+            // Apply visibility based on 'basic' config
             uiConfig.forEach(item => {
                 const el = document.getElementById(item.id);
                 if (!el) return;
 
-                const shouldShow = isQuick ? item.quick : item.basic;
+                const shouldShow = item.basic;
 
                 // If it's an expand-wrapper, use 'open' class
                 if (el.classList.contains('expand-wrapper')) {
@@ -801,16 +785,6 @@
                     else el.classList.add('hidden');
                 }
             });
-
-            // Toggle QR preview elements 
-            // Logic: In Quick mode, maybe hide ECC? 
-            // User didn't ask to configure ECC visibility, but we can infer: 
-            // If we want FULL config, we might add it. For now, keep existing ECC logic or simplify.
-            // Existing logic was: Hide ECC in Quick.
-            // ECC Logic: Check config
-            const eccConfig = uiConfig.find(c => c.id === 'ecc-selector');
-            const showEcc = eccConfig ? (isQuick ? eccConfig.quick : eccConfig.basic) : !isQuick; // Default fallback
-            document.getElementById('ecc-selector').classList.toggle('hidden', !showEcc);
 
             document.getElementById('check-display').classList.add('hidden');
             document.getElementById('md5-display').classList.add('hidden');
@@ -918,23 +892,21 @@
             let html = '';
 
             // 1. General UI Field Toggles
+            html += `
+                <div class="grid grid-cols-[1fr_auto] gap-2 mb-2 font-bold text-xs text-gray-500 border-b pb-1">
+                    <div>項目</div>
+                    <div>顯示</div>
+                </div>
+            `;
             html += uiConfig.map(item => `
-                            <div class="grid grid-cols-3 gap-2 items-center bg-white p-2 rounded shadow-sm border border-gray-100">
+                            <div class="grid grid-cols-[1fr_auto] gap-2 items-center bg-white p-2 rounded shadow-sm border border-gray-100">
                                 <div class="text-[10px] font-bold text-gray-700 truncate" title="${item.label}">${item.label}</div>
-                                <div class="flex justify-center">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="sr-only peer" 
-                                            ${item.quick ? 'checked' : ''} 
-                                            onchange="toggleConfig('${item.id}', 'quick')">
-                                        <div class="w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
-                                    </label>
-                                </div>
                                 <div class="flex justify-center">
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" class="sr-only peer" 
                                             ${item.basic ? 'checked' : ''} 
                                             onchange="toggleConfig('${item.id}', 'basic')">
-                                        <div class="w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-gray-600"></div>
+                                        <div class="w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
                                     </label>
                                 </div>
                             </div>
