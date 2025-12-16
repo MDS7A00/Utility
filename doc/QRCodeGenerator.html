@@ -356,27 +356,8 @@
                             <div class="col-span-4">
                                 <label class="block text-[10px] text-gray-500 mb-1">車種類別(1)</label>
                                 <!-- 常駐顯示：快速按鈕 -->
-                                <div class="grid grid-cols-2 gap-1 mb-2">
-                                    <div class="grid grid-cols-2 gap-1">
-                                        <button onclick="selectClass('A')" data-class="A"
-                                            class="class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
-                                            A<br><span class="text-[8px]">非對號</span>
-                                        </button>
-                                        <button onclick="selectClass('L')" data-class="L"
-                                            class="class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
-                                            L<br><span class="text-[8px]">月台票</span>
-                                        </button>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-1">
-                                        <button onclick="selectClass('N')" data-class="N"
-                                            class="class-btn p-2 border-2 border-blue-500 bg-blue-50 rounded text-[10px] font-mono font-bold text-blue-700">
-                                            N<br><span class="text-[8px]">對號車</span>
-                                        </button>
-                                        <button onclick="selectClass('M')" data-class="M"
-                                            class="class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors">
-                                            M<br><span class="text-[8px]">異級票</span>
-                                        </button>
-                                    </div>
+                                <div id="class-quick-mode" class="flex flex-wrap gap-2 mb-4">
+                                    <!-- Dynamic buttons will be injected here -->
                                 </div>
 
                                 <!-- 進階：完整下拉選單 (只在基本設定顯示) -->
@@ -774,6 +755,8 @@
             switchTab('ticket');
             toggleTicketMode('quick'); // 初始化為快速選單模式
             selectClass('N'); // Default class
+            populateClassOptions();
+            renderClassButtons();
             updateHistoryCount();
             renderSettingsUI();
         });
@@ -889,12 +872,18 @@
 
         function toggleVisibleClass(code) {
             if (visibleClasses.includes(code)) {
+                // Don't remove if it's the last one, or maybe allow? Allow for now.
+                // But don't remove if it's currently selected?
                 visibleClasses = visibleClasses.filter(c => c !== code);
             } else {
                 visibleClasses.push(code);
+                // Sort order according to CLASS_OPTIONS original order
+                const orderMap = CLASS_OPTIONS.reduce((acc, curr, idx) => { acc[curr.v] = idx; return acc; }, {});
+                visibleClasses.sort((a, b) => orderMap[a] - orderMap[b]);
             }
             saveSettings();
-            renderSettingsUI(); // re-render needed to show check state
+            populateClassOptions();
+            renderClassButtons(); // Update buttons immediately
         }
 
         function populateClassOptions() {
@@ -973,26 +962,52 @@
         }
 
         // --- CLASS SELECTION ---
-        function selectClass(classCode) {
-            // Update visual selection for buttons
-            document.querySelectorAll('.class-btn').forEach(btn => {
-                if (btn.dataset.class === classCode) {
-                    btn.className = 'class-btn p-2 border-2 border-blue-500 bg-blue-50 rounded text-[10px] font-mono font-bold text-blue-700';
-                } else {
-                    btn.className = 'class-btn p-2 border rounded text-[10px] font-mono hover:bg-blue-50 transition-colors';
-                }
-            });
+        function renderClassButtons() {
+            const container = document.getElementById('class-quick-mode');
+            const currentVal = document.getElementById('t-class').value;
 
-            // Update select value and helper text
+            // Get options based on visibleClasses
+            const optionsToShow = CLASS_OPTIONS.filter(opt => visibleClasses.includes(opt.v));
+
+            // If optionsToShow is empty, maybe show default N? Or show nothing?
+            // User logic: unchecked items disappear.
+
+            container.innerHTML = optionsToShow.map(opt => {
+                const isSelected = opt.v === currentVal;
+                // Format Label: "A:一般非對號" -> Split to "A" and "一般非對號" if possible, or just use full text
+                // Existing UI used small text for code, smaller for label?
+                // Let's us format like: Code (Big) + Name (Small)
+                const parts = opt.t.split(':');
+                const code = parts[0];
+                const name = parts[1] || '';
+
+                const activeClass = 'border-2 border-blue-500 bg-blue-50 text-blue-700 font-bold';
+                const inactiveClass = 'border border-gray-200 hover:bg-blue-50 text-gray-600';
+
+                return `
+                        <button onclick="selectClass('${opt.v}')" data-class="${opt.v}"
+                            class="class-btn p-2 rounded text-[10px] font-mono transition-colors min-w-[60px] flex flex-col items-center justify-center ${isSelected ? activeClass : inactiveClass}">
+                            <span class="text-xs">${code}</span>
+                            <span class="text-[8px] bg-transparent whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">${name}</span>
+                        </button>
+                    `;
+            }).join('');
+        }
+
+        function selectClass(classCode) {
+            // Update select value
             const select = document.getElementById('t-class');
             select.value = classCode;
+
+            // Re-render buttons to update highlight
+            renderClassButtons();
 
             updateTicketQR();
         }
 
         function syncClassFromSelect() {
             const classCode = document.getElementById('t-class').value;
-            selectClass(classCode); // This will update button highlight if match found
+            selectClass(classCode);
         }
 
         // --- SERIAL GENERATOR ---
