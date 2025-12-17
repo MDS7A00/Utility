@@ -736,11 +736,7 @@
 
                     <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
                         <!-- Header -->
-                        <div class="grid grid-cols-3 gap-2 mb-4 border-b pb-2">
-                            <div class="text-xs font-bold text-gray-400">欄位群組</div>
-                            <div class="text-xs font-bold text-center text-blue-600">快速選單</div>
-                            <div class="text-xs font-bold text-center text-gray-600">基本設定</div>
-                        </div>
+                        <!-- Header Removed -->
 
                         <!-- Config Items Container -->
                         <div id="config-items-container" class="space-y-4">
@@ -798,7 +794,7 @@
         let currentMode = 'ticket';
         let currentHistoryPreviewIdx = -1;
         let serialCounter = 0;
-        let ticketInputMode = 'quick'; // 'quick' or 'basic'
+        // let ticketInputMode = 'quick'; // Removed
         let currentEccLevel = 'M'; // 當前糾錯等級
 
         // --- CONFIGURATION ---
@@ -813,21 +809,21 @@
         ];
 
         const DEFAULT_CONFIG = [
-            { id: 'hash-key-wrapper', label: '閘門雜湊值', quick: false, basic: true },
-            { id: 'advanced-class-select', label: '更多類別 (下拉選單)', quick: false, basic: false },
-            { id: 'ecc-selector', label: '糾錯等級 (L/M/Q/H)', quick: false, basic: false }, // User requested checkable
-            { id: 'basic-settings-group', label: '年份/隨機/流水號', quick: false, basic: true },
-            { id: 'wrapper-stations', label: '車站區間', quick: true, basic: true },
-            { id: 'wrapper-cars', label: '車種設定', quick: true, basic: true },
-            { id: 'wrapper-times', label: '行程時間', quick: true, basic: true },
-            { id: 'wrapper-details', label: '票種/路線', quick: true, basic: true },
-            { id: 'wrapper-price', label: '票價', quick: true, basic: true },
-            { id: 'advanced-details-wrapper', label: '付款/優惠/取票', quick: false, basic: true },
-            { id: 'buy-time-wrapper', label: '購票時間', quick: false, basic: true },
+            { id: 'hash-key-wrapper', label: '閘門雜湊值', basic: true },
+            { id: 'advanced-class-select', label: '更多類別 (下拉選單)', basic: false },
+            { id: 'ecc-selector', label: '糾錯等級 (L/M/Q/H)', basic: false },
+            { id: 'basic-settings-group', label: '年份/隨機/流水號', basic: false },
+            { id: 'wrapper-stations', label: '車站區間', basic: false },
+            { id: 'wrapper-cars', label: '車種設定', basic: true },
+            { id: 'wrapper-times', label: '行程時間', basic: true },
+            { id: 'wrapper-details', label: '票種/路線', basic: true },
+            { id: 'wrapper-price', label: '票價', basic: true },
+            { id: 'advanced-details-wrapper', label: '付款/優惠/取票', basic: false },
+            { id: 'buy-time-wrapper', label: '購票時間', basic: true },
         ];
 
         let uiConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-        let visibleClasses = CLASS_OPTIONS.map(o => o.v); // Default all visible
+        let visibleClasses = ['A', 'C', 'F', 'G', 'L', 'M', 'N']; // Default from image
 
         window.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
@@ -842,7 +838,7 @@
             generateNewSerial();
             handleTimeChange();
             switchTab('ticket');
-            toggleTicketMode('quick'); // 初始化為快速選單模式
+            toggleTicketMode(); // Apply visibility
             selectClass('N'); // Default class
             populateClassOptions();
             renderClassButtons();
@@ -862,11 +858,8 @@
 
         // --- TICKET INPUT MODE TOGGLE (Smooth Transition) ---
         // --- TICKET INPUT MODE (Single "Basic" Mode) ---
-        function toggleTicketMode(mode) {
-            // mode arg is ignored, always 'basic' logic
-            ticketInputMode = 'basic';
-
-            // Apply visibility based on 'basic' config
+        function toggleTicketMode() {
+            // Always apply 'basic' config (now the only config)
             uiConfig.forEach(item => {
                 const el = document.getElementById(item.id);
                 if (!el) return;
@@ -922,7 +915,7 @@
             };
             localStorage.setItem(CONFIG_KEY, JSON.stringify(data));
             // Real-time update if we are in ticket mode
-            if (currentMode === 'ticket') toggleTicketMode(ticketInputMode);
+            if (currentMode === 'ticket') toggleTicketMode();
             populateClassOptions(); // Re-render select
         }
 
