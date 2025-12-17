@@ -244,9 +244,8 @@
                         <div class="flex flex-col gap-2">
                             <div id="preview-label" class="text-[10px] md:text-xs font-bold text-blue-500 hidden">
                                 正在預覽歷史紀錄</div>
-                            <div id="qr-raw-content"
-                                class="hidden md:block bg-gray-100 p-2 rounded text-[9px] font-mono break-all text-gray-600 border border-gray-200">
-                            </div>
+                            <!-- Raw Content Hidden -->
+                            <div id="qr-raw-content" class="hidden"></div>
 
                             <div id="ecc-selector"
                                 class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm flex items-center gap-2"
@@ -272,15 +271,8 @@
                                 </div>
                             </div>
 
-                            <div id="check-display"
-                                class="text-xs text-gray-600 font-mono bg-white p-2 rounded-lg border border-gray-300 shadow-sm">
-                                <div class="text-[8px] text-gray-400 mb-0.5">驗證</div>
-                                <div class="text-[10px]">Check: <span class="font-bold text-red-500"
-                                        id="disp-checksum-mobile">----</span></div>
-                            </div>
-
                             <div id="md5-display" class="bg-white p-2 rounded-lg border border-gray-300 shadow-sm">
-                                <div class="text-[8px] text-gray-400 mb-0.5">校驗</div>
+                                <div class="text-[8px] text-gray-400 mb-0.5">閘門雜湊值</div>
                                 <div class="text-[10px]"><span class="text-[9px] text-gray-500">MD5: </span><span
                                         class="font-bold text-red-500 font-mono" id="disp-checksum"></span></div>
                             </div>
@@ -875,10 +867,17 @@
                     if (shouldShow) el.classList.remove('hidden');
                     else el.classList.add('hidden');
                 }
-            });
 
-            document.getElementById('check-display').classList.add('hidden');
-            document.getElementById('md5-display').classList.add('hidden');
+                // Special Case: Link MD5/Check display to Hash Key visibility
+                if (item.id === 'hash-key-wrapper') {
+                    const md5El = document.getElementById('md5-display');
+                    if (shouldShow) {
+                        if (md5El) md5El.classList.remove('hidden');
+                    } else {
+                        if (md5El) md5El.classList.add('hidden');
+                    }
+                }
+            });
 
             updateTicketQR();
         }
@@ -914,8 +913,8 @@
                 visibleClasses: visibleClasses
             };
             localStorage.setItem(CONFIG_KEY, JSON.stringify(data));
-            // Real-time update if we are in ticket mode
-            if (currentMode === 'ticket') toggleTicketMode();
+            // Always update UI visibility
+            toggleTicketMode();
             populateClassOptions(); // Re-render select
         }
 
@@ -1300,9 +1299,9 @@
             document.getElementById('disp-price').innerText = res.price;
             document.getElementById('disp-time-buy').innerText = res.tBuy;
             document.getElementById('disp-checksum').innerText = res.checksum;
-            document.getElementById('disp-checksum-mobile').innerText = res.checksum;
+            // document.getElementById('disp-checksum-mobile').innerText = res.checksum; // Removed
 
-            document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
+            // document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay; // Hidden
 
             qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: currentEccLevel });
         }
@@ -1333,15 +1332,25 @@
             document.getElementById('btn-save-ticket').classList.toggle('hidden', !isTicket);
             document.getElementById('preview-label').classList.add('hidden');
             const md5Display = document.getElementById('md5-display');
-            if (md5Display) md5Display.classList.toggle('hidden', mode === 'general');
+            // Remove generic toggle which interferes with config logic
+            // if (md5Display) md5Display.classList.toggle('hidden', mode === 'general');
+
+            // Force hide for non-ticket modes (general/history), Ticket/Settings handled by toggleTicketMode
+            if (mode === 'general' || mode === 'history') {
+                if (md5Display) md5Display.classList.add('hidden');
+            }
 
             if (mode === 'ticket') {
+                toggleTicketMode(); // Ensure UI is synced
                 // generateNewSerial(); // Optional: Auto regen on tab switch
                 updateTicketQR();
             }
             if (mode === 'general') updateGeneralQR();
             if (mode === 'history') renderHistory();
-            if (mode === 'settings') renderSettingsUI();
+            if (mode === 'settings') {
+                renderSettingsUI();
+                toggleTicketMode(); // Ensure preview follows settings
+            }
         }
 
         // --- GENERAL MODE SHORTCUTS ---
@@ -1473,25 +1482,82 @@
 
             list.innerHTML = h.map((item, i) => {
                 const activeClass = (i === currentHistoryPreviewIdx) ? 'active-preview' : 'border-gray-200';
+                const TICKET_TYPES = {
+                    '1': '全票', '2': '孩童', '3': '敬老', '4': '愛心', '5': '愛陪',
+                    '6': '愛孩', '7': '員工', '8': '眷屬', '9': '眷孩', 'A': '記帳',
+                    'B': '國軍', 'C': '榮譽', 'D': '教師', 'E': '學生', 'F': '自行車', 'Z': '未指定'
+                };
+
+                // Helper to format station "Code Name"
+                const fmtStation = (val) => {
+                    if (!val) return '????';
+                    const code = val.split(' ')[0];
+                    const name = TRA_STATIONS[code];
+                    return name ? `${code} ${name}` : val;
+                };
+
+                const sMain = fmtStation(item.startMain);
+                const eMain = fmtStation(item.endMain);
+
                 const carName = CAR_NAMES[item.carMain] || item.carMain;
+                const typeName = TICKET_TYPES[item.type] || item.type;
+
+                // Parse Times
+                const tDep = item.timeDepart ? item.timeDepart.slice(11, 16) : '--:--';
+                const tArr = item.timeArrive ? item.timeArrive.slice(11, 16) : '--:--';
+
+                // Parse Stations (Format: "1000 台北" -> "1000 台北")
+                // User wants "Main Start" and "Main End"
+                // Store format is likely "1000" if from main input?
+                // Wait, t-start-main is manually input? No, datalist.
+                // Value is "1000" usually based on default.
+                // If user selected from list, it might be just code. 
+                // Let's assume just showing value is fine. item.startMain
+
                 // Pre-calc ticket no for display
                 const vRes = calculateValidation(item.classCode, item.year, item.serial, item.random, item.hashKey);
                 const tNo = `${item.classCode}${item.year}${item.serial}${vRes.code}${item.random}`;
 
                 return `
-                <div class="history-card bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all ${activeClass}">
-                    <div class="flex justify-between mb-2">
-                        <div>
-                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">${carName}</span>
-                            <span class="text-sm font-mono text-gray-500 ml-1">$${item.price}</span>
+                <div class="history-card bg-white border rounded-xl p-3 shadow-sm hover:shadow-md transition-all ${activeClass} flex flex-col gap-2">
+                    
+                    <!-- Row 1: Stations (Left) & Tags (Right) -->
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2 mt-1">
+                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                             <span class="text-sm font-bold text-gray-800">${sMain}</span>
+                             <span class="text-gray-300 mx-1">➜</span>
+                             <span class="text-sm font-bold text-gray-800">${eMain}</span>
                         </div>
-                        <span class="text-xs text-gray-400">#${i + 1}</span>
+                        <div class="flex gap-1">
+                            <span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold border border-blue-100">${carName}</span>
+                            <span class="bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded text-[10px] border border-gray-100">${typeName}</span>
+                        </div>
                     </div>
-                    <div class="text-sm text-gray-700 mb-2 font-mono text-xs font-bold text-gray-600">${tNo}</div>
-                    <div class="flex gap-2">
-                        <button onclick="showHistoryQR(${i})" class="flex-1 bg-green-50 text-green-600 py-2 rounded-lg text-xs font-bold border border-green-200">顯示 QR</button>
-                        <button onclick="loadHistory(${i})" class="px-4 bg-blue-50 text-blue-600 py-2 rounded-lg text-xs font-bold border border-blue-200">載入</button>
-                        <button onclick="delHistory(${i})" class="px-3 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-bold border border-red-200">刪</button>
+
+                    <!-- Row 2: Times (Left) & Price (Right) -->
+                    <div class="flex justify-between items-end">
+                        <div class="flex gap-3 text-xs text-gray-500 pl-3.5">
+                            <span class="font-mono">${tDep}</span>
+                            <span class="text-gray-300">➜</span>
+                            <span class="font-mono">${tArr}</span>
+                        </div>
+                        <div class="text-right">
+                             <div class="text-sm font-bold text-gray-800 font-mono">$${item.price}</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Ticket No (Small) -->
+                    <div class="pt-2 border-t border-dashed border-gray-100 flex justify-between items-center mt-1">
+                        <div class="text-[10px] text-gray-400 font-mono">${tNo}</div>
+                        <span class="text-[10px] text-gray-300">#${i + 1}</span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-2 mt-1">
+                        <button onclick="showHistoryQR(${i})" class="flex-1 bg-green-50 text-green-600 py-1.5 rounded text-xs font-bold border border-green-200 hover:bg-green-100">顯示 QR</button>
+                        <button onclick="loadHistory(${i})" class="px-3 bg-blue-50 text-blue-600 py-1.5 rounded text-xs font-bold border border-blue-200 hover:bg-blue-100">載入</button>
+                        <button onclick="delHistory(${i})" class="px-2 bg-red-50 text-red-500 py-1.5 rounded text-xs font-bold border border-red-200 hover:bg-red-100">刪</button>
                     </div>
                 </div>`;
             }).join('');
@@ -1532,7 +1598,15 @@
             const res = generateTicketData(item);
             document.getElementById('qr-raw-content').innerHTML = res.htmlDisplay;
             document.getElementById('preview-label').classList.remove('hidden');
-            document.getElementById('preview-label').innerText = `預覽紀錄 #${i + 1}`;
+
+            // Summarize Info
+            const sMainCode = item.startMain ? item.startMain.split(' ')[0] : '????';
+            const eMainCode = item.endMain ? item.endMain.split(' ')[0] : '????';
+            const sName = TRA_STATIONS[sMainCode] || sMainCode;
+            const eName = TRA_STATIONS[eMainCode] || eMainCode;
+            const tSummary = `${sName}➜${eName} $${item.price}`;
+
+            document.getElementById('preview-label').innerText = `預覽紀錄 #${i + 1} (${tSummary})`;
 
             qr.set({ value: res.finalString, foreground: '#000000', background: '#ffffff', level: currentEccLevel });
         }
