@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Client (Offline)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>MQTT Client</h1>
+            <div id="status-indicator" class="status distinct">Disconnected</div>
+        </header>
+
+        <section class="connection-panel">
+            <h2>連線設定 Connection</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="protocol">Protocol</label>
+                    <select id="protocol" disabled>
+                        <option value="wss" selected>wss://</option>
+                    </select>
+                </div>
+                <div class="form-group flex-grow">
+                    <label for="host">Host</label>
+                    <input type="text" id="host" value="s10001.gate.railway.gov.tw">
+                </div>
+                <div class="form-group">
+                    <label for="port">Port</label>
+                    <input type="number" id="port" value="9443">
+                </div>
+                <div class="form-group">
+                    <label for="path">Path</label>
+                    <input type="text" id="path" value="/">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="clientId">Client ID</label>
+                    <input type="text" id="clientId">
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password">
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="btn-connect" class="primary">連線 Connect</button>
+                <button id="btn-disconnect" class="secondary" disabled>斷線 Disconnect</button>
+            </div>
+        </section>
+
+        <section class="subscription-panel">
+            <h2>訂閱 Subscription</h2>
+            <div class="input-group">
+                <input type="text" id="topic" value="#" placeholder="Topic (e.g. #)">
+                <button id="btn-subscribe" disabled>訂閱 Subscribe</button>
+            </div>
+            <div id="active-subscriptions" class="tags">
+                <!-- Active subscriptions will act here -->
+            </div>
+        </section>
+
+        <section class="messages-panel">
+            <div class="panel-header">
+                <h2>訊息 Messages</h2>
+                <button id="btn-clear" class="small">清除 Clear</button>
+            </div>
+            <div id="message-list" class="message-list">
+                <!-- Messages will appear here -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Load Local MQTT Library -->
+    <script src="lib/mqtt.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
